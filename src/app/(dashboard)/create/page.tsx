@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, BookOpen, Check, GitCompareArrows, Info } from "lucide-react";
 
@@ -670,7 +670,7 @@ function Generate({
 /* =========================================
  * 6. MAIN PAGE (ORCHESTRATOR)
  * ========================================= */
-export default function CreatePage() {
+function CreatePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -794,5 +794,13 @@ export default function CreatePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreatePage() {
+  return (
+    <Suspense fallback={null}>
+      <CreatePageContent />
+    </Suspense>
   );
 }

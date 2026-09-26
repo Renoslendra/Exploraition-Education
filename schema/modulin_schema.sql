@@ -1,8 +1,10 @@
 -- =============================================================================
 -- MODULIN — Database Schema for Supabase PostgreSQL
 -- =============================================================================
+-- Versi: 2.1 (Terakhir diperbarui: September 2026)
+-- Sesuai Standar: BSKAP Kemendikbudristek No. 032/H/KR/2024 (10 Komponen Modul Ajar)
+-- Rujukan Dokumen: SCHEMA.md, AGENT.md, ARSITEKTUR.md, ALUR_OUTPUT_AI.md, TEMPLATE_ACUAN.md
 -- Jalankan file ini di Supabase SQL Editor (satu kali, urutan dari atas ke bawah).
--- Pastikan RLS diaktifkan setelah tabel dibuat.
 -- =============================================================================
 
 
@@ -24,15 +26,20 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";   -- untuk gen_random_uuid()
 CREATE TABLE IF NOT EXISTS learning_models (
     id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
     kode        text        NOT NULL UNIQUE,
+    singkatan   text,
     nama        text        NOT NULL,
     deskripsi   text,
     fokus       text,
+    cocok_untuk text,
+    icon        text,
+    aliases     text[]      DEFAULT '{}',
     sintak      jsonb       NOT NULL DEFAULT '[]'::jsonb
 );
 
-COMMENT ON TABLE  learning_models         IS 'Model pembelajaran yang didukung Kurikulum Merdeka. Data statis, di-seed saat setup.';
-COMMENT ON COLUMN learning_models.kode    IS 'Identifier singkat: pbl, pjbl, dl, il, cooperative, circ.';
-COMMENT ON COLUMN learning_models.sintak  IS 'Tahapan/langkah per fase dalam format JSON array.';
+COMMENT ON TABLE  learning_models             IS 'Model pembelajaran resmi Kurikulum Merdeka. Data statis, di-seed saat setup.';
+COMMENT ON COLUMN learning_models.kode        IS 'Identifier standar: pbl, pjbl, dl, il, cooperative, circ.';
+COMMENT ON COLUMN learning_models.aliases     IS 'Alias kode model untuk kompatibilitas frontend (misal: discovery untuk dl, inquiry untuk il).';
+COMMENT ON COLUMN learning_models.sintak      IS 'Tahapan/langkah sintaks pembelajaran dalam format JSON array.';
 
 -- -----------------------------------------------------------------------------
 -- curriculum_phases
@@ -47,7 +54,7 @@ CREATE TABLE IF NOT EXISTS curriculum_phases (
 );
 
 COMMENT ON TABLE  curriculum_phases          IS 'Fase Kurikulum Merdeka: Fondasi, A–F. Data statis.';
-COMMENT ON COLUMN curriculum_phases.kode     IS 'fondasi | a | b | c | d | e | f';
+COMMENT ON COLUMN curriculum_phases.kode     IS 'fondasi | a | b | c | d | e | f (case-insensitive via LOWER)';
 COMMENT ON COLUMN curriculum_phases.kelas    IS 'Rentang kelas, NULL untuk Fase Fondasi.';
 
 -- -----------------------------------------------------------------------------
@@ -57,11 +64,14 @@ CREATE TABLE IF NOT EXISTS subjects (
     id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
     nama        text        NOT NULL,
     jenjang     text,
+    is_custom   boolean     NOT NULL DEFAULT false,
+    created_by  uuid,                           -- FK ke users.id jika custom subject
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  subjects         IS 'Daftar mata pelajaran. Bisa di-seed dari daftar resmi Kemendikbud atau diisi custom guru.';
-COMMENT ON COLUMN subjects.jenjang IS 'SD | SMP | SMA | SMK | PAUD — filter mapel sesuai jenjang guru.';
+COMMENT ON TABLE  subjects            IS 'Daftar mata pelajaran resmi Kemendikbudristek dan mapel kustom guru.';
+COMMENT ON COLUMN subjects.jenjang    IS 'SD | SMP | SMA | SMK | PAUD — filter mapel sesuai jenjang guru.';
+COMMENT ON COLUMN subjects.is_custom  IS 'true jika diinput mandiri oleh guru, false jika dari daftar resmi pemerintah.';
 
 
 -- =============================================================================
@@ -73,17 +83,20 @@ CREATE TABLE IF NOT EXISTS users (
     id          uuid        PRIMARY KEY,            -- dari auth.uid(), BUKAN gen_random_uuid()
     email       text        NOT NULL,
     nama        text        NOT NULL,
+    avatar_url  text,                               -- URL foto profil dari Google OAuth
     instansi    text,                               -- nama sekolah (teks bebas, MVP)
     jenjang     text        CHECK (jenjang IN ('PAUD', 'SD', 'SMP', 'SMA', 'SMK')),
-    role        text        NOT NULL DEFAULT 'guru',
+    role        text        NOT NULL DEFAULT 'guru'
+                            CHECK (role IN ('guru', 'admin')),
     created_at  timestamptz NOT NULL DEFAULT now(),
     updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  users          IS 'Profil guru. id = auth.uid() dari Supabase Auth.';
-COMMENT ON COLUMN users.id       IS 'Sama persis dengan auth.users.id. Tidak menggunakan gen_random_uuid().';
-COMMENT ON COLUMN users.instansi IS 'Nama sekolah (teks bebas untuk MVP). Normalisasi ke tabel schools di fase berikutnya.';
-COMMENT ON COLUMN users.role     IS 'guru (default) | admin — untuk future admin role.';
+COMMENT ON TABLE  users            IS 'Profil guru. id = auth.uid() dari Supabase Auth.';
+COMMENT ON COLUMN users.id         IS 'Sama persis dengan auth.users.id. Tidak menggunakan gen_random_uuid().';
+COMMENT ON COLUMN users.instansi   IS 'Nama sekolah (teks bebas untuk MVP). Normalisasi ke tabel schools di fase berikutnya.';
+COMMENT ON COLUMN users.avatar_url IS 'URL avatar pengguna yang diperoleh dari metadata akun Google.';
+COMMENT ON COLUMN users.role       IS 'guru (default) | admin — untuk future admin role.';
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
 
@@ -113,7 +126,7 @@ CREATE TABLE IF NOT EXISTS schools (
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  schools      IS 'Data sekolah. Opsional di MVP — instansi masih disimpan sebagai teks di tabel users.';
+COMMENT ON TABLE  schools      IS 'Data sekolah resmi. Opsional di MVP — instansi masih disimpan sebagai teks di tabel users.';
 COMMENT ON COLUMN schools.npsn IS 'Nomor Pokok Sekolah Nasional — identifier resmi Kemendikbud. UNIQUE.';
 
 CREATE INDEX IF NOT EXISTS idx_schools_npsn ON schools (npsn);
@@ -129,26 +142,45 @@ CREATE TABLE IF NOT EXISTS modules (
     subject_id      uuid        REFERENCES subjects (id) ON DELETE SET NULL,
     phase_id        uuid        REFERENCES curriculum_phases (id) ON DELETE SET NULL,
     model_id        uuid        REFERENCES learning_models (id) ON DELETE SET NULL,
-    judul_bab       text        NOT NULL,
-    kelas           text,                           -- kelas spesifik dalam fase (7, 8, 9, dst.)
-    tahun_ajaran    text        NOT NULL,           -- contoh: "2024/2025"
+    
+    -- Metadata Modul & Identitas
+    mata_pelajaran  text,                           -- Teks nama mapel langsung (menjamin kustom mapel tidak hilang)
+    jenjang         text,                           -- PAUD, SD, SMP, SMA, SMK
+    fase            text,                           -- Fondasi, A, B, C, D, E, F
+    kelas           text,                           -- kelas spesifik (misal: 1, 7, 10)
+    judul_bab       text        NOT NULL,           -- Judul bab / materi pokok
+    topik           text,                           -- Sub-topik spesifik modul ajar
+    tahun_ajaran    text        NOT NULL,           -- contoh: "2026/2027"
+    alokasi_waktu   text,                           -- contoh: "2 x 45 menit (1 Pertemuan)"
+    
+    -- Status Siklus Modul
     status          text        NOT NULL DEFAULT 'draft'
-                                CHECK (status IN ('draft', 'final')),
+                                CHECK (status IN ('draft', 'generated', 'edited', 'final', 'archived')),
+    
+    -- Payload Dokumen Lengkap (10 Komponen BSKAP No. 032/H/KR/2024 & Rich Text)
+    structured_data jsonb,                          -- JSON StructuredModulAjarData (10 komponen + pengesahan)
+    html_content    text,                           -- Konten gabungan TipTap editor siap cetak
+    
+    -- Audit & Soft Delete
+    deleted_at      timestamptz DEFAULT NULL,       -- Soft delete sesuai ARSITEKTUR.md
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  modules             IS 'Tabel utama. Satu row = satu modul ajar milik satu guru.';
-COMMENT ON COLUMN modules.status      IS 'draft | final';
-COMMENT ON COLUMN modules.kelas       IS 'Kelas spesifik dalam fase, misal fase D bisa kelas 7, 8, atau 9.';
-COMMENT ON COLUMN modules.tahun_ajaran IS 'Format: "2024/2025".';
+COMMENT ON TABLE  modules                 IS 'Tabel utama perangkat ajar. Satu row = satu modul ajar terstruktur milik satu guru.';
+COMMENT ON COLUMN modules.status          IS 'draft | generated | edited | final | archived';
+COMMENT ON COLUMN modules.mata_pelajaran  IS 'Nama mapel dalam teks, menjaga integritas jika subject_id bernilai NULL.';
+COMMENT ON COLUMN modules.structured_data IS 'Data terstruktur 10 komponen acuan resmi BSKAP No. 032/H/KR/2024.';
+COMMENT ON COLUMN modules.html_content    IS 'Konten HTML TipTap Editor untuk kebutuhan pratinjau teks dan ekspor cepat.';
+COMMENT ON COLUMN modules.deleted_at      IS 'Timestamp soft delete. Query aktif wajib mengecek WHERE deleted_at IS NULL.';
 
--- Index
-CREATE INDEX IF NOT EXISTS idx_modules_user_id    ON modules (user_id);
-CREATE INDEX IF NOT EXISTS idx_modules_status      ON modules (status);
-CREATE INDEX IF NOT EXISTS idx_modules_created_at  ON modules (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_modules_user_status_created
-    ON modules (user_id, status, created_at DESC);  -- composite untuk query dashboard
+-- Index Performa
+CREATE INDEX IF NOT EXISTS idx_modules_user_id       ON modules (user_id);
+CREATE INDEX IF NOT EXISTS idx_modules_status        ON modules (status);
+CREATE INDEX IF NOT EXISTS idx_modules_deleted_at    ON modules (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_modules_created_at    ON modules (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_modules_user_active   ON modules (user_id, status, created_at DESC) 
+    WHERE deleted_at IS NULL;                       -- Composite index teroptimasi untuk query dashboard guru
 
 CREATE OR REPLACE TRIGGER trg_modules_updated_at
     BEFORE UPDATE ON modules
@@ -162,25 +194,27 @@ CREATE OR REPLACE TRIGGER trg_modules_updated_at
 CREATE TABLE IF NOT EXISTS module_sections (
     id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
     module_id       uuid        NOT NULL REFERENCES modules (id) ON DELETE CASCADE,
-    jenis_section   text        NOT NULL,           -- tipe section (lihat mapping di SCHEMA.md)
+    jenis_section   text        NOT NULL,           -- tipe section resmi (10 komponen BSKAP)
     label           text,                           -- nama tampilan di UI
-    konten          jsonb,                          -- konten terstruktur / TipTap JSON
+    konten          jsonb,                          -- konten terstruktur per bagian
+    konten_html     text,                           -- representasi HTML untuk editor TipTap
     urutan          integer     NOT NULL,
     aktif           boolean     NOT NULL DEFAULT true,
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  module_sections               IS 'Konten modul per bagian. Cascade delete mengikuti modules.';
-COMMENT ON COLUMN module_sections.jenis_section IS 'informasi_umum | tujuan_pembelajaran | kegiatan_pembelajaran | asesmen | lampiran | dst.';
-COMMENT ON COLUMN module_sections.konten        IS 'Konten terstruktur atau TipTap JSON untuk rich text.';
-COMMENT ON COLUMN module_sections.aktif         IS 'Guru bisa disable section tanpa menghapus data.';
+COMMENT ON TABLE  module_sections               IS 'Konten modul per komponen modular. Cascade delete mengikuti modules.';
+COMMENT ON COLUMN module_sections.jenis_section IS '10 Komponen BSKAP: informasi_umum | tujuan_pembelajaran | profil_pelajar_pancasila | materi_alat_bahan | model_pembelajaran | kegiatan_pembelajaran | asesmen | refleksi | daftar_pustaka | pengayaan_remedial | lembar_pengesahan | lampiran.';
+COMMENT ON COLUMN module_sections.konten        IS 'Konten terstruktur atau node TipTap JSON.';
+COMMENT ON COLUMN module_sections.konten_html   IS 'Render HTML spesifik bagian untuk TipTap Editor.';
+COMMENT ON COLUMN module_sections.aktif         IS 'Guru dapat menonaktifkan bagian tanpa menghapus data.';
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_module_sections_module_id
     ON module_sections (module_id);
 CREATE INDEX IF NOT EXISTS idx_module_sections_module_urutan
-    ON module_sections (module_id, urutan);         -- sorted retrieval
+    ON module_sections (module_id, urutan);         -- Sorted retrieval
 
 CREATE OR REPLACE TRIGGER trg_module_sections_updated_at
     BEFORE UPDATE ON module_sections
@@ -197,7 +231,8 @@ CREATE TABLE IF NOT EXISTS ai_generation_logs (
     user_id         uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     tipe            text        CHECK (tipe IN ('full', 'partial')),
     section_target  text,                           -- NULL untuk full, nama section untuk partial
-    prompt_hash     text,                           -- SHA-256 hash dari prompt (bukan prompt lengkap)
+    model_name      text        DEFAULT 'gemini-2.0-flash', -- Versi model AI yang digunakan
+    prompt_hash     text,                           -- SHA-256 hash dari prompt (bukan prompt lengkap demi privasi)
     tokens_used     integer,
     durasi_ms       integer,
     status          text        CHECK (status IN ('success', 'error', 'timeout')),
@@ -205,9 +240,10 @@ CREATE TABLE IF NOT EXISTS ai_generation_logs (
     created_at      timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  ai_generation_logs              IS 'Audit log setiap pemanggilan Gemini AI. Insert hanya via service role (server-side).';
-COMMENT ON COLUMN ai_generation_logs.prompt_hash  IS 'SHA-256 hash dari prompt — bukan prompt lengkap, demi privasi guru.';
+COMMENT ON TABLE  ai_generation_logs              IS 'Audit log setiap pemanggilan Gemini AI untuk debugging dan pemantauan kuota.';
+COMMENT ON COLUMN ai_generation_logs.prompt_hash  IS 'SHA-256 hash dari prompt — bukan prompt lengkap demi privasi guru.';
 COMMENT ON COLUMN ai_generation_logs.tipe         IS 'full = seluruh modul, partial = regenerasi satu section.';
+COMMENT ON COLUMN ai_generation_logs.model_name    IS 'Nama model Gemini yang dieksekusi (contoh: gemini-2.0-flash).';
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_ai_logs_user_id    ON ai_generation_logs (user_id);
@@ -230,9 +266,9 @@ CREATE TABLE IF NOT EXISTS exports (
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE  exports          IS 'Riwayat file yang diekspor. File disimpan di Supabase Storage.';
-COMMENT ON COLUMN exports.file_url IS 'URL file di Supabase Storage. Bisa expired jika menggunakan signed URL.';
-COMMENT ON COLUMN exports.user_id  IS 'Redundan dengan modules.user_id tapi mempercepat RLS check tanpa join.';
+COMMENT ON TABLE  exports          IS 'Riwayat berkas yang diekspor. Berkas fisik disimpan di Supabase Storage.';
+COMMENT ON COLUMN exports.file_url IS 'URL berkas di Supabase Storage (bucket "exports").';
+COMMENT ON COLUMN exports.user_id  IS 'Redundan dengan modules.user_id untuk mempercepat evaluasi RLS tanpa JOIN.';
 
 CREATE INDEX IF NOT EXISTS idx_exports_module_id ON exports (module_id);
 CREATE INDEX IF NOT EXISTS idx_exports_user_id   ON exports (user_id);
@@ -284,10 +320,13 @@ CREATE POLICY "curriculum_phases_public_read" ON curriculum_phases
     FOR SELECT USING (true);
 
 -- -----------------------------------------------------------------------
--- subjects — public read, tidak ada write dari client
+-- subjects — public read mapel resmi; guru bisa kelola mapel custom sendiri
 -- -----------------------------------------------------------------------
 CREATE POLICY "subjects_public_read" ON subjects
-    FOR SELECT USING (true);
+    FOR SELECT USING (is_custom = false OR created_by = auth.uid());
+
+CREATE POLICY "subjects_insert_custom" ON subjects
+    FOR INSERT WITH CHECK (auth.uid() = created_by AND is_custom = true);
 
 -- -----------------------------------------------------------------------
 -- modules — CRUD hanya untuk modul milik sendiri
@@ -344,20 +383,26 @@ CREATE POLICY "module_sections_delete_own" ON module_sections
     );
 
 -- -----------------------------------------------------------------------
--- ai_generation_logs — guru hanya bisa READ log milik sendiri.
---   INSERT hanya via service role (server-side API route).
+-- ai_generation_logs — guru bisa baca log milik sendiri.
+--   INSERT diizinkan baik via server service-role maupun autentikasi user guru.
 -- -----------------------------------------------------------------------
 CREATE POLICY "ai_logs_select_own" ON ai_generation_logs
     FOR SELECT USING (auth.uid() = user_id);
 
+CREATE POLICY "ai_logs_insert_own" ON ai_generation_logs
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 -- -----------------------------------------------------------------------
--- exports — akses hanya untuk ekspor milik sendiri
+-- exports — akses riwayat ekspor berkas milik sendiri
 -- -----------------------------------------------------------------------
 CREATE POLICY "exports_select_own" ON exports
     FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "exports_insert_own" ON exports
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "exports_update_own" ON exports
+    FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "exports_delete_own" ON exports
     FOR DELETE USING (auth.uid() = user_id);
@@ -370,91 +415,123 @@ CREATE POLICY "exports_delete_own" ON exports
 -- -----------------------------------------------------------------------
 -- learning_models (6 model pembelajaran Kurikulum Merdeka)
 -- -----------------------------------------------------------------------
-INSERT INTO learning_models (kode, nama, deskripsi, fokus, sintak) VALUES
+INSERT INTO learning_models (kode, singkatan, nama, deskripsi, fokus, cocok_untuk, icon, aliases, sintak) VALUES
 (
     'pbl',
+    'PBL',
     'Problem-Based Learning',
-    'Pembelajaran berbasis masalah nyata yang relevan dengan kehidupan siswa.',
-    'Pemecahan masalah nyata — proses berakhir pada solusi.',
+    'Pembelajaran berbasis masalah kontekstual. Peserta didik menganalisis dan merumuskan solusi atas masalah nyata.',
+    'Pemecahan masalah kontekstual yang berfokus pada perumusan solusi konkret.',
+    'Materi analitis yang menuntut penalaran kritis dan pemecahan kasus kontekstual (IPA, IPS, Matematika, PKn).',
+    '🧩',
+    ARRAY['problem-based-learning', 'pbl'],
     '[
-        {"fase": 1, "nama": "Orientasi Masalah", "deskripsi": "Guru menyajikan masalah nyata. Siswa mengidentifikasi dan merumuskan masalah."},
-        {"fase": 2, "nama": "Pengorganisasian Belajar", "deskripsi": "Siswa membagi tugas dalam kelompok untuk menyelidiki masalah."},
-        {"fase": 3, "nama": "Penyelidikan Mandiri/Kelompok", "deskripsi": "Siswa mengumpulkan informasi, melakukan eksperimen, atau mencari referensi."},
-        {"fase": 4, "nama": "Pengembangan & Penyajian Solusi", "deskripsi": "Siswa mengembangkan dan mempresentasikan solusi atas masalah."},
-        {"fase": 5, "nama": "Analisis & Evaluasi", "deskripsi": "Siswa dan guru mengevaluasi proses penyelidikan dan solusi yang dihasilkan."}
+        {"fase": 1, "nama": "Orientasi Murid pada Masalah", "deskripsi": "Guru menyajikan masalah kontekstual. Siswa mengidentifikasi dan mencatat pertanyaan pemantik."},
+        {"fase": 2, "nama": "Pengorganisasian Belajar", "deskripsi": "Siswa membagi peran dalam kelompok untuk menyelidiki batasan masalah."},
+        {"fase": 3, "nama": "Penyelidikan Mandiri & Kelompok", "deskripsi": "Siswa mengumpulkan data empiris, melakukan eksperimen, atau mengkaji referensi."},
+        {"fase": 4, "nama": "Pengembangan & Penyajian Solusi", "deskripsi": "Siswa merumuskan hipotesis akhir dan menyajikan hasil telaah karya."},
+        {"fase": 5, "nama": "Analisis & Evaluasi Pemecahan Masalah", "deskripsi": "Siswa dan guru mengevaluasi alur penalaran dan efektivitas solusi yang dirumuskan."}
     ]'::jsonb
 ),
 (
     'pjbl',
+    'PjBL',
     'Project-Based Learning',
-    'Pembelajaran berbasis proyek yang menghasilkan produk nyata sebagai luaran utama.',
-    'Pemecahan masalah nyata — proses berakhir pada produk.',
+    'Pembelajaran berbasis proyek berjangka waktu. Peserta didik merancang, mewujudkan, dan mempresentasikan karya nyata.',
+    'Penyusunan karya dan artefak nyata melalui tahapan proyek terencana.',
+    'Proyek interdisipliner, Praktik Kejuruan (SMK), Prakarya, Seni, IPAS, Bahasa, P5.',
+    '🚀',
+    ARRAY['project-based-learning', 'pjbl'],
     '[
-        {"fase": 1, "nama": "Penentuan Pertanyaan Mendasar", "deskripsi": "Guru mengajukan pertanyaan esensial yang mendorong siswa membuat produk."},
-        {"fase": 2, "nama": "Perencanaan Proyek", "deskripsi": "Siswa merancang proyek: tujuan, jadwal, pembagian tugas, dan sumber daya."},
-        {"fase": 3, "nama": "Penyusunan Jadwal", "deskripsi": "Guru dan siswa menyepakati timeline dan milestones proyek."},
-        {"fase": 4, "nama": "Monitoring Kemajuan", "deskripsi": "Guru memantau perkembangan proyek dan memberikan umpan balik berkala."},
-        {"fase": 5, "nama": "Pengujian Hasil", "deskripsi": "Siswa mempresentasikan produk untuk mendapat umpan balik dari guru dan teman."},
-        {"fase": 6, "nama": "Evaluasi & Refleksi", "deskripsi": "Siswa dan guru merefleksikan proses dan hasil proyek secara keseluruhan."}
+        {"fase": 1, "nama": "Penentuan Pertanyaan Mendasar", "deskripsi": "Guru memberikan pertanyaan pemantik esensial yang memicu penciptaan karya nyata."},
+        {"fase": 2, "nama": "Perancangan Desain Proyek", "deskripsi": "Siswa merancang pembagian peran, aturan main, dan kebutuhan alat bahan proyek."},
+        {"fase": 3, "nama": "Penyusunan Jadwal & Linimasa", "deskripsi": "Guru dan siswa menyepakati tenggat waktu setiap milestone proyek."},
+        {"fase": 4, "nama": "Pemantauan Keaktifan & Kemajuan Proyek", "deskripsi": "Guru memfasilitasi bimbingan teknis dan mencatat perkembangan berkala kelompok."},
+        {"fase": 5, "nama": "Penilaian Hasil Karya (Gelar Karya)", "deskripsi": "Kelompok memamerkan produk dan menerima umpan balik apresiatif dari rekan sejawat."},
+        {"fase": 6, "nama": "Evaluasi Pengalaman Belajar", "deskripsi": "Siswa dan guru merefleksikan proses belajar serta kendala selama pengerjaan proyek."}
     ]'::jsonb
 ),
 (
     'dl',
+    'DL',
     'Discovery Learning',
-    'Pembelajaran melalui eksplorasi dan penemuan konsep secara mandiri oleh siswa.',
-    'Penemuan konsep secara mandiri melalui eksplorasi.',
+    'Pembelajaran melalui observasi dan eksplorasi terarah untuk membuktikan konsep keilmuan secara mandiri.',
+    'Penemuan konsep melalui eksplorasi terarah dan verifikasi data empiris.',
+    'Sains, Matematika, dan materi yang membutuhkan pembuktian hukum alam atau fakta empiris.',
+    '🔍',
+    ARRAY['discovery', 'discovery-learning', 'dl'],
     '[
-        {"fase": 1, "nama": "Pemberian Rangsangan (Stimulation)", "deskripsi": "Guru mengajukan pertanyaan atau menyajikan fenomena untuk memancing rasa ingin tahu."},
-        {"fase": 2, "nama": "Identifikasi Masalah (Problem Statement)", "deskripsi": "Siswa mengidentifikasi dan merumuskan masalah atau hipotesis."},
-        {"fase": 3, "nama": "Pengumpulan Data (Data Collection)", "deskripsi": "Siswa mengumpulkan informasi melalui observasi, eksperimen, atau membaca."},
-        {"fase": 4, "nama": "Pengolahan Data (Data Processing)", "deskripsi": "Siswa menganalisis dan menginterpretasikan data yang telah dikumpulkan."},
-        {"fase": 5, "nama": "Pembuktian (Verification)", "deskripsi": "Siswa membuktikan hipotesis berdasarkan hasil pengolahan data."},
-        {"fase": 6, "nama": "Penarikan Kesimpulan (Generalization)", "deskripsi": "Siswa menyimpulkan konsep yang ditemukan dan mengaplikasikannya pada konteks baru."}
+        {"fase": 1, "nama": "Pemberian Rangsangan (Stimulation)", "deskripsi": "Guru menyajikan fenomena atau gambar pemantik rasa ingin tahu siswa."},
+        {"fase": 2, "nama": "Identifikasi Masalah (Problem Statement)", "deskripsi": "Siswa mengidentifikasi masalah relevan dan merumuskan dugaan sementara."},
+        {"fase": 3, "nama": "Pengumpulan Data (Data Collection)", "deskripsi": "Siswa mengumpulkan bukti melalui studi pustaka, observasi lingkungan, atau eksperimen."},
+        {"fase": 4, "nama": "Pengolahan Data (Data Processing)", "deskripsi": "Siswa menafsirkan informasi dan menghubungkan konsep yang sedang dipelajari."},
+        {"fase": 5, "nama": "Pembuktian (Verification)", "deskripsi": "Siswa membuktikan kebenaran hipotesis awal berdasarkan data yang diperoleh."},
+        {"fase": 6, "nama": "Penarikan Kesimpulan (Generalization)", "deskripsi": "Siswa merumuskan prinsip umum atau kaidah konsep yang telah terbukti."}
     ]'::jsonb
 ),
 (
     'il',
+    'IL',
     'Inquiry Learning',
-    'Pembelajaran berbasis penyelidikan ilmiah dengan pertanyaan sebagai motor penggerak.',
-    'Penyelidikan ilmiah berbasis pertanyaan.',
+    'Pembelajaran berbasis penyelidikan ilmiah melalui perumusan pertanyaan kritis dan uji hipotesis.',
+    'Penyelidikan ilmiah untuk menjawab pertanyaan penelitian berbasis bukti.',
+    'IPA, Fisika, Kimia, Biologi, IPS Terpadu, Sejarah, dan riset ilmiah.',
+    '🔬',
+    ARRAY['inquiry', 'inquiry-learning', 'il'],
     '[
-        {"fase": 1, "nama": "Orientasi", "deskripsi": "Guru menciptakan konteks dan membangkitkan rasa ingin tahu siswa."},
-        {"fase": 2, "nama": "Merumuskan Masalah", "deskripsi": "Siswa merumuskan pertanyaan penyelidikan yang akan dijawab."},
-        {"fase": 3, "nama": "Merumuskan Hipotesis", "deskripsi": "Siswa membuat dugaan sementara berdasarkan pengetahuan awal."},
-        {"fase": 4, "nama": "Mengumpulkan Data", "deskripsi": "Siswa melakukan observasi, eksperimen, atau wawancara untuk mengumpulkan bukti."},
-        {"fase": 5, "nama": "Menguji Hipotesis", "deskripsi": "Siswa menganalisis data untuk membuktikan atau menolak hipotesis."},
-        {"fase": 6, "nama": "Merumuskan Kesimpulan", "deskripsi": "Siswa menyimpulkan hasil penyelidikan dan mengkomunikasikannya."}
+        {"fase": 1, "nama": "Orientasi Fenomena", "deskripsi": "Guru membimbing pengamatan terhadap fenomena kontekstual."},
+        {"fase": 2, "nama": "Perumusan Masalah Penyelidikan", "deskripsi": "Siswa merumuskan pertanyaan terarah yang dapat diuji secara objektif."},
+        {"fase": 3, "nama": "Perumusan Hipotesis", "deskripsi": "Siswa menyusun dugaan logis sebelum pengumpulan data dimulai."},
+        {"fase": 4, "nama": "Pengumpulan Data Investigatif", "deskripsi": "Siswa merancang percobaan dan mencatat hasil pengukuran secara teliti."},
+        {"fase": 5, "nama": "Pengujian Hipotesis", "deskripsi": "Siswa mencocokkan hasil analisis data dengan dugaan awal."},
+        {"fase": 6, "nama": "Penarikan Simpulan & Komunikasi", "deskripsi": "Siswa mempublikasikan laporan penyelidikan dan menarik simpulan ilmiah."}
     ]'::jsonb
 ),
 (
     'cooperative',
+    'CL',
     'Cooperative Learning',
-    'Pembelajaran kolaboratif dalam kelompok kecil dengan struktur peran yang jelas.',
-    'Kolaborasi terstruktur dalam kelompok kecil.',
+    'Pembelajaran kelompok kecil dengan pembagian peran terstruktur dan tanggung jawab individu.',
+    'Kolaborasi terstruktur dalam kelompok untuk mencapai tujuan belajar bersama.',
+    'Mata pelajaran umum, penguatan gotong royong, komunikasi, dan kecerdasan sosial.',
+    '🤝',
+    ARRAY['cooperative-learning', 'cooperative', 'cl'],
     '[
-        {"fase": 1, "nama": "Menyampaikan Tujuan & Memotivasi", "deskripsi": "Guru menjelaskan tujuan pembelajaran dan pentingnya kerja sama."},
-        {"fase": 2, "nama": "Menyajikan Informasi", "deskripsi": "Guru menyajikan materi dasar yang dibutuhkan untuk tugas kelompok."},
-        {"fase": 3, "nama": "Mengorganisasikan Kelompok", "deskripsi": "Siswa dibagi ke dalam kelompok kecil (3-5 orang) dengan peran yang jelas."},
-        {"fase": 4, "nama": "Membimbing Kerja Kelompok", "deskripsi": "Kelompok mengerjakan tugas; guru berkeliling memberikan bimbingan."},
-        {"fase": 5, "nama": "Evaluasi", "deskripsi": "Kelompok mempresentasikan hasil kerja; guru dan teman memberikan penilaian."},
-        {"fase": 6, "nama": "Memberikan Penghargaan", "deskripsi": "Guru mengapresiasi usaha individu dan kelompok yang berprestasi."}
+        {"fase": 1, "nama": "Penyampaian Tujuan & Motivasi", "deskripsi": "Guru menyampaikan target capaian pembelajaran dan pentingnya gotong royong."},
+        {"fase": 2, "nama": "Penyajian Informasi Pengantar", "deskripsi": "Guru memberikan paparan konsep kunci sebelum siswa berdiskusi."},
+        {"fase": 3, "nama": "Pengorganisasian Tim Kooperatif", "deskripsi": "Siswa dibagi ke dalam kelompok heterogen dengan pembagian peran spesifik."},
+        {"fase": 4, "nama": "Bimbingan Kerja Kelompok", "deskripsi": "Guru berkeliling memberikan scaffolding pada kelompok yang membutuhkan bimbingan."},
+        {"fase": 5, "nama": "Evaluasi Hasil Belajar", "deskripsi": "Kelompok mempresentasikan hasil kerja dan dinilai berdasarkan rubrik keaktifan."},
+        {"fase": 6, "nama": "Pemberian Penghargaan Tim", "deskripsi": "Guru memberikan apresiasi kepada tim dan kontributor terbaik."}
     ]'::jsonb
 ),
 (
     'circ',
+    'CIRC',
     'Cooperative Integrated Reading and Composition',
-    'Model kooperatif yang berfokus pada pengembangan kemampuan membaca dan menulis secara terpadu.',
-    'Literasi membaca dan menulis secara kooperatif.',
+    'Model kooperatif terpadu untuk penguatan keterampilan membaca analitis dan penulisan teks.',
+    'Literasi membaca analitis dan penulisan teks secara kolaboratif.',
+    'Bahasa Indonesia, Bahasa Inggris, Literasi Teks, Sejarah, dan Pendidikan Agama.',
+    '📖',
+    ARRAY['circ', 'cooperative-reading'],
     '[
-        {"fase": 1, "nama": "Orientasi", "deskripsi": "Guru memperkenalkan teks dan tujuan membaca; siswa memprediksi isi berdasarkan judul/gambar."},
-        {"fase": 2, "nama": "Organisasi", "deskripsi": "Siswa dibagi dalam kelompok; setiap anggota mendapat bagian teks untuk dibaca."},
-        {"fase": 3, "nama": "Pengenalan Konsep", "deskripsi": "Siswa membaca teks secara mandiri dan mencatat ide pokok serta kosakata baru."},
-        {"fase": 4, "nama": "Publikasi", "deskripsi": "Anggota kelompok berbagi pemahaman tentang bagian teks masing-masing (jigsaw)."},
-        {"fase": 5, "nama": "Penguatan & Latihan", "deskripsi": "Kelompok mendiskusikan keseluruhan teks dan mengerjakan tugas menulis bersama."},
-        {"fase": 6, "nama": "Penilaian", "deskripsi": "Hasil tulisan dipresentasikan dan dinilai berdasarkan rubrik membaca dan menulis."}
+        {"fase": 1, "nama": "Orientasi Wacana & Prediksi", "deskripsi": "Guru membagikan teks tematik; siswa memprediksi garis besar isi wacana."},
+        {"fase": 2, "nama": "Pembentukan Tim Pembaca (Jigsaw)", "deskripsi": "Siswa dibagi dalam kelompok kecil untuk menelaah bagian paragraf teks spesifik."},
+        {"fase": 3, "nama": "Membaca Mandiri & Analisis Kosakata", "deskripsi": "Siswa membaca cermat, mencatat ide pokok, dan mengidentifikasi istilah baru."},
+        {"fase": 4, "nama": "Diskusi Saling Berbagi Telaah", "deskripsi": "Siswa saling bertukar pemahaman antarbagian teks untuk merekonstruksi makna utuh."},
+        {"fase": 5, "nama": "Latihan Menulis Terpadu", "deskripsi": "Kelompok menyusun draf ringkasan atau esai pendek berdasarkan pemahaman bersama."},
+        {"fase": 6, "nama": "Evaluasi & Umpan Balik Rubrik", "deskripsi": "Hasil karya tulis dinilai bersama menggunakan rubrik literasi membaca-menulis."}
     ]'::jsonb
 )
-ON CONFLICT (kode) DO NOTHING;
+ON CONFLICT (kode) DO UPDATE SET
+    singkatan   = EXCLUDED.singkatan,
+    nama        = EXCLUDED.nama,
+    deskripsi   = EXCLUDED.deskripsi,
+    fokus       = EXCLUDED.fokus,
+    cocok_untuk = EXCLUDED.cocok_untuk,
+    icon        = EXCLUDED.icon,
+    aliases     = EXCLUDED.aliases,
+    sintak      = EXCLUDED.sintak;
 
 -- -----------------------------------------------------------------------
 -- curriculum_phases (Fase Fondasi + A–F Kurikulum Merdeka)
@@ -462,66 +539,69 @@ ON CONFLICT (kode) DO NOTHING;
 INSERT INTO curriculum_phases (kode, nama, jenjang, kelas, keterangan) VALUES
 (
     'fondasi', 'Fase Fondasi', 'PAUD/TK/RA', NULL,
-    'Menggunakan capaian perkembangan, bukan capaian pembelajaran. Struktur modul berbeda dari fase lainnya.'
+    'Menggunakan Capaian Perkembangan (bukan Capaian Pembelajaran) dengan pendekatan bermain-belajar kontekstual.'
 ),
-('a', 'Fase A', 'SD/MI',        '1-2', NULL),
-('b', 'Fase B', 'SD/MI',        '3-4', NULL),
-('c', 'Fase C', 'SD/MI',        '5-6', NULL),
-('d', 'Fase D', 'SMP/MTs',      '7-9', NULL),
-('e', 'Fase E', 'SMA/SMK/MA',   '10',  NULL),
-('f', 'Fase F', 'SMA/SMK/MA',   '11-12', NULL)
-ON CONFLICT (kode) DO NOTHING;
+('a', 'Fase A', 'SD/MI',        '1-2', 'Literasi awal dan pengenalan konsep konkret.'),
+('b', 'Fase B', 'SD/MI',        '3-4', 'Transisi dari pemahaman konkret ke semi-abstrak.'),
+('c', 'Fase C', 'SD/MI',        '5-6', 'Pemahaman konsep mandiri dan keterampilan analisis dasar.'),
+('d', 'Fase D', 'SMP/MTs',      '7-9', 'Penalaran logis, penalaran kritis, dan analisis menengah.'),
+('e', 'Fase E', 'SMA/SMK/MA',   '10',  'Eksplorasi minat, pemantapan keilmuan, dan analisis kritis.'),
+('f', 'Fase F', 'SMA/SMK/MA',   '11-12', 'Penjurusan bidang keilmuan dan kematangan akademik/kejuruan.')
+ON CONFLICT (kode) DO UPDATE SET
+    nama       = EXCLUDED.nama,
+    jenjang    = EXCLUDED.jenjang,
+    kelas      = EXCLUDED.kelas,
+    keterangan = EXCLUDED.keterangan;
 
 -- -----------------------------------------------------------------------
 -- subjects — daftar mata pelajaran umum per jenjang
 -- -----------------------------------------------------------------------
-INSERT INTO subjects (nama, jenjang) VALUES
+INSERT INTO subjects (nama, jenjang, is_custom) VALUES
 -- SD/MI
-('Pendidikan Agama & Budi Pekerti',         'SD'),
-('Pendidikan Pancasila',                     'SD'),
-('Bahasa Indonesia',                         'SD'),
-('Matematika',                               'SD'),
-('Ilmu Pengetahuan Alam & Sosial (IPAS)',    'SD'),
-('Seni (Rupa/Musik/Teater/Tari)',            'SD'),
-('Pendidikan Jasmani Olahraga & Kesehatan', 'SD'),
-('Bahasa Inggris',                           'SD'),
+('Pendidikan Agama & Budi Pekerti',         'SD', false),
+('Pendidikan Pancasila',                     'SD', false),
+('Bahasa Indonesia',                         'SD', false),
+('Matematika',                               'SD', false),
+('Ilmu Pengetahuan Alam & Sosial (IPAS)',    'SD', false),
+('Seni (Rupa/Musik/Teater/Tari)',            'SD', false),
+('Pendidikan Jasmani Olahraga & Kesehatan', 'SD', false),
+('Bahasa Inggris',                           'SD', false),
 -- SMP/MTs
-('Pendidikan Agama & Budi Pekerti',         'SMP'),
-('Pendidikan Pancasila',                     'SMP'),
-('Bahasa Indonesia',                         'SMP'),
-('Matematika',                               'SMP'),
-('Ilmu Pengetahuan Alam (IPA)',              'SMP'),
-('Ilmu Pengetahuan Sosial (IPS)',            'SMP'),
-('Bahasa Inggris',                           'SMP'),
-('Informatika',                              'SMP'),
-('Seni Budaya',                              'SMP'),
-('Pendidikan Jasmani Olahraga & Kesehatan', 'SMP'),
--- SMA/MA
-('Pendidikan Agama & Budi Pekerti',         'SMA'),
-('Pendidikan Pancasila',                     'SMA'),
-('Bahasa Indonesia',                         'SMA'),
-('Matematika',                               'SMA'),
-('Bahasa Inggris',                           'SMA'),
-('Biologi',                                  'SMA'),
-('Fisika',                                   'SMA'),
-('Kimia',                                    'SMA'),
-('Sejarah Indonesia',                        'SMA'),
-('Geografi',                                 'SMA'),
-('Ekonomi',                                  'SMA'),
-('Sosiologi',                                'SMA'),
-('Informatika',                              'SMA'),
-('Seni Budaya',                              'SMA'),
-('Pendidikan Jasmani Olahraga & Kesehatan', 'SMA'),
--- PAUD
-('Nilai Agama & Budi Pekerti',              'PAUD'),
-('Jati Diri',                               'PAUD'),
-('Dasar Literasi & STEAM',                  'PAUD')
+('Pendidikan Agama & Budi Pekerti',         'SMP', false),
+('Pendidikan Pancasila',                     'SMP', false),
+('Bahasa Indonesia',                         'SMP', false),
+('Matematika',                               'SMP', false),
+('Ilmu Pengetahuan Alam (IPA)',              'SMP', false),
+('Ilmu Pengetahuan Sosial (IPS)',            'SMP', false),
+('Bahasa Inggris',                           'SMP', false),
+('Informatika',                              'SMP', false),
+('Seni Budaya',                              'SMP', false),
+('Pendidikan Jasmani Olahraga & Kesehatan', 'SMP', false),
+-- SMA/SMK
+('Pendidikan Agama & Budi Pekerti',         'SMA', false),
+('Pendidikan Pancasila',                     'SMA', false),
+('Bahasa Indonesia',                         'SMA', false),
+('Matematika',                               'SMA', false),
+('Bahasa Inggris',                           'SMA', false),
+('Biologi',                                  'SMA', false),
+('Fisika',                                   'SMA', false),
+('Kimia',                                    'SMA', false),
+('Sejarah Indonesia',                        'SMA', false),
+('Geografi',                                 'SMA', false),
+('Ekonomi',                                  'SMA', false),
+('Sosiologi',                                'SMA', false),
+('Informatika',                              'SMA', false),
+('Seni Budaya',                              'SMA', false),
+('Pendidikan Jasmani Olahraga & Kesehatan', 'SMA', false),
+-- PAUD / TK
+('Nilai Agama & Budi Pekerti',              'PAUD', false),
+('Jati Diri',                               'PAUD', false),
+('Dasar Literasi & STEAM',                  'PAUD', false)
 ON CONFLICT DO NOTHING;
 
 
 -- =============================================================================
--- 10. HELPER FUNCTION — Rate Limiting
---     Dipakai di API route untuk cek quota harian generasi AI per guru.
+-- 10. HELPER FUNCTION — Rate Limiting AI Generation
 -- =============================================================================
 
 CREATE OR REPLACE FUNCTION count_ai_generations_today(p_user_id uuid)
@@ -537,12 +617,11 @@ AS $$
 $$;
 
 COMMENT ON FUNCTION count_ai_generations_today IS
-    'Menghitung jumlah generasi AI yang berhasil dalam 24 jam terakhir untuk satu guru. Dipakai untuk rate limiting harian.';
+    'Menghitung jumlah generasi AI yang berhasil dalam 24 jam terakhir untuk satu guru. Digunakan untuk rate limiting harian.';
 
 
 -- =============================================================================
 -- 11. TRIGGER — Auto-sync users dari Supabase Auth
---     Saat guru pertama kali login via Google OAuth, buat row di tabel users.
 -- =============================================================================
 
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -552,45 +631,78 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    INSERT INTO public.users (id, email, nama)
+    INSERT INTO public.users (id, email, nama, avatar_url)
     VALUES (
         NEW.id,
         NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email)
+        COALESCE(
+            NEW.raw_user_meta_data->>'full_name',
+            NEW.raw_user_meta_data->>'name',
+            split_part(NEW.email, '@', 1)
+        ),
+        COALESCE(
+            NEW.raw_user_meta_data->>'avatar_url',
+            NEW.raw_user_meta_data->>'picture'
+        )
     )
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET
+        email      = EXCLUDED.email,
+        nama       = COALESCE(EXCLUDED.nama, users.nama),
+        avatar_url = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
+        updated_at = now();
 
     RETURN NEW;
 END;
 $$;
 
--- Pasang trigger ke auth.users (bawaan Supabase)
+-- Pasang trigger ke auth.users
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 COMMENT ON FUNCTION handle_new_user IS
-    'Trigger: saat user baru terdaftar via Supabase Auth (Google OAuth), otomatis insert ke tabel public.users.';
+    'Trigger: saat user baru terdaftar via Supabase Auth (Google OAuth), otomatis membuat atau memperbarui profil di tabel public.users.';
+
+
+-- =============================================================================
+-- 12. SUPABASE STORAGE BUCKET (Instruksi & Policy 'exports')
+-- =============================================================================
+-- Jalankan blok di bawah ini jika storage bucket "exports" belum dibuat via Dashboard:
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('exports', 'exports', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Policy Storage: guru hanya bisa membaca file ekspor miliknya sendiri (folder = user_id)
+CREATE POLICY "exports_storage_select_own" ON storage.objects
+    FOR SELECT USING (
+        bucket_id = 'exports' AND
+        (auth.uid())::text = (storage.foldername(name))[1]
+    );
+
+CREATE POLICY "exports_storage_insert_own" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'exports' AND
+        (auth.uid())::text = (storage.foldername(name))[1]
+    );
+
+CREATE POLICY "exports_storage_delete_own" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'exports' AND
+        (auth.uid())::text = (storage.foldername(name))[1]
+    );
 
 
 -- =============================================================================
 -- SELESAI
 -- =============================================================================
--- Checklist setelah menjalankan file ini:
---   [x] Extensions aktif
---   [x] Semua tabel dibuat
---   [x] RLS diaktifkan di semua tabel
---   [x] Semua policy RLS dibuat
---   [x] Seed data: 6 learning_models, 7 curriculum_phases, 38 subjects
---   [x] Trigger auto-sync auth.users → public.users
---   [x] Helper function rate limiting
---
--- Langkah manual setelah ini (di Supabase Dashboard):
---   1. Buat Supabase Storage bucket bernama "exports" (private).
---   2. Set lifecycle policy bucket exports: hapus file > 24 jam (atau sesuai keputusan).
---   3. Isi environment variables di Vercel:
---        NEXT_PUBLIC_SUPABASE_URL
---        NEXT_PUBLIC_SUPABASE_ANON_KEY
---        SUPABASE_SERVICE_ROLE_KEY
---        GEMINI_API_KEY
+-- Ringkasan Audit Skema v2.1:
+--   [x] Dukungan penuh 10 Komponen Modul Ajar (BSKAP Kemendikbud No. 032/H/KR/2024).
+--   [x] Kolom structured_data jsonb & html_content pada tabel modules untuk sinkronisasi seketika.
+--   [x] Kolom deleted_at timestamptz & index terfilter untuk soft delete (ARSITEKTUR.md).
+--   [x] Sinkronisasi status modul ('draft', 'generated', 'edited', 'final', 'archived').
+--   [x] Dukungan alias model pembelajaran ('discovery', 'inquiry') dan metadata model lengkap.
+--   [x] Dukungan mata pelajaran kustom (is_custom & created_by) dengan RLS terisolasi.
+--   [x] Sinkronisasi nama & avatar dari Google OAuth pada trigger handle_new_user.
+--   [x] Konfigurasi Storage Bucket & RLS untuk file ekspor .docx/.pdf.
 -- =============================================================================
