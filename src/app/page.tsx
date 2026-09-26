@@ -20,6 +20,8 @@ import {
   PlusSquare,
   Send,
   ArrowRight,
+  ChevronDown,
+  Menu
 } from "lucide-react";
 
 /* Typewriter Data for Hero Section */
@@ -139,6 +141,7 @@ export default function LandingPage() {
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   const [mainVisible, setMainVisible] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   /* Reduced Motion Detection */
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -160,6 +163,41 @@ export default function LandingPage() {
 
   /* 8. Learning Models State */
   const [selectedModelId, setSelectedModelId] = useState("pbl");
+
+  /* 9. Scroll State for Navbar */
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  /* 10. Hero Headline Typewriter */
+  const HERO_WORDS = ["Modul Ajar", "RPP Merdeka", "Bahan Ajar", "Soal Ujian"];
+  const [heroWordIndex, setHeroWordIndex] = useState(0);
+  const [heroText, setHeroText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentWord = HERO_WORDS[heroWordIndex];
+    let timeout: NodeJS.Timeout;
+
+    if (!isDeleting && heroText === currentWord) {
+      timeout = setTimeout(() => setIsDeleting(true), 2000);
+    } else if (isDeleting && heroText === "") {
+      setIsDeleting(false);
+      setHeroWordIndex((prev) => (prev + 1) % HERO_WORDS.length);
+    } else {
+      timeout = setTimeout(() => {
+        setHeroText(currentWord.substring(0, heroText.length + (isDeleting ? -1 : 1)));
+      }, isDeleting ? 50 : 100);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [heroText, isDeleting, heroWordIndex]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   /* Initialize reduced motion and Splash Screen Timer */
   useEffect(() => {
@@ -283,33 +321,33 @@ export default function LandingPage() {
   const currentContent1 = prefersReducedMotion
     ? HERO_TYPEWRITER.content1
     : typewriterIndex > l1
-    ? HERO_TYPEWRITER.content1.slice(0, Math.min(typewriterIndex - l1, l2))
-    : "";
+      ? HERO_TYPEWRITER.content1.slice(0, Math.min(typewriterIndex - l1, l2))
+      : "";
 
   const currentLabel2 = prefersReducedMotion
     ? HERO_TYPEWRITER.label2
     : typewriterIndex > l1 + l2
-    ? HERO_TYPEWRITER.label2.slice(0, Math.min(typewriterIndex - l1 - l2, l3))
-    : "";
+      ? HERO_TYPEWRITER.label2.slice(0, Math.min(typewriterIndex - l1 - l2, l3))
+      : "";
 
   const currentContent2 = prefersReducedMotion
     ? HERO_TYPEWRITER.content2
     : typewriterIndex > l1 + l2 + l3
-    ? HERO_TYPEWRITER.content2.slice(
+      ? HERO_TYPEWRITER.content2.slice(
         0,
         Math.min(typewriterIndex - l1 - l2 - l3, l4)
       )
-    : "";
+      : "";
 
   const isCompleteHero = typewriterIndex >= l1 + l2 + l3 + l4;
   const activeHeroField =
     typewriterIndex >= l1 + l2 + l3
       ? "content2"
       : typewriterIndex >= l1 + l2
-      ? "label2"
-      : typewriterIndex >= l1
-      ? "content1"
-      : "label1";
+        ? "label2"
+        : typewriterIndex >= l1
+          ? "content1"
+          : "label1";
 
   const selectedModel =
     MODELS_DATA.find((m) => m.id === selectedModelId) || MODELS_DATA[0];
@@ -319,24 +357,38 @@ export default function LandingPage() {
       {/* ==================== 1. SPLASH SCREEN ==================== */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#faf8f4] transition-opacity duration-400 ease-out ${
-            splashFading ? "opacity-0 pointer-events-none" : "opacity-100"
-          }`}
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#faf8f4] transition-opacity duration-400 ease-out ${splashFading ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
         >
           <div className="flex flex-col items-center">
-            {/* Logotype in Cormorant Garamond SemiBold with fade-in scale */}
+            {/* Logotype with fade-in scale */}
             <div className="flex flex-col items-center animate-splash-logo">
-              <Image src="/modulin-logo-2.png" alt="Modulin Logo" width={80} height={80} className="rounded-2xl object-contain mb-4" />
-              <span className="font-display font-semibold text-5xl sm:text-6xl text-[#1a1917] tracking-tight">
+              <Image
+                src="/modulin-icon-only.png"
+                alt="Modulin Icon"
+                width={96}
+                height={96}
+                className="object-contain mb-6 drop-shadow-xl"
+              />
+              <span className="font-display font-bold text-5xl sm:text-6xl text-[#1a5c50] tracking-tight">
                 Modulin
               </span>
             </div>
 
-            {/* Three sequential pulsing dots in teal */}
-            <div className="mt-6 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2a7d6e] animate-pulse-seq-1" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2a7d6e] animate-pulse-seq-2" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2a7d6e] animate-pulse-seq-3" />
+            {/* Premium Loading Line */}
+            <div className="mt-8 w-48 h-[3px] bg-[#e2dbd0] rounded-full overflow-hidden relative">
+              <style>{`
+                @keyframes indeterminate-slide {
+                  0% { transform: translateX(-100%) scaleX(0.2); }
+                  50% { transform: translateX(0) scaleX(1); }
+                  100% { transform: translateX(100%) scaleX(0.2); }
+                }
+                .animate-indeterminate {
+                  animation: indeterminate-slide 1.5s infinite ease-in-out;
+                  transform-origin: left;
+                }
+              `}</style>
+              <div className="absolute top-0 left-0 h-full w-full bg-[#1a5c50] rounded-full animate-indeterminate"></div>
             </div>
           </div>
         </div>
@@ -344,143 +396,138 @@ export default function LandingPage() {
 
       {/* ==================== MAIN PAGE CONTAINER ==================== */}
       <div
-        className={`flex-1 flex flex-col transition-opacity duration-500 ${
-          mainVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`flex-1 flex flex-col transition-opacity duration-500 ${mainVisible ? "opacity-100" : "opacity-0"
+          }`}
       >
         {/* ==================== 2. NAVIGASI ==================== */}
-        <header className="h-[56px] bg-[#faf8f4] border-b border-[#e2dbd0] sticky top-0 z-40 w-full">
-          <div className="max-w-5xl mx-auto px-6 h-full flex items-center justify-between">
-            {/* Kiri: Logotype Modulin Cormorant Garamond SemiBold 24px */}
+        <header
+          className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${isScrolled
+              ? "h-[64px] bg-[#1a5c50]/90 backdrop-blur-md shadow-lg py-2"
+              : "h-[80px] bg-transparent py-4"
+            } ${mainVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"}`}
+        >
+          <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+            {/* Kiri: Logotype Modulin */}
             <Link
               href="/"
-              className="flex items-center gap-2"
+              className="flex items-center gap-3 transition-transform hover:scale-105 duration-200"
             >
-              <Image src="/modulin-logo-2.png" alt="Modulin Logo" width={32} height={32} className="rounded-md object-contain" />
-              <span className="font-display font-semibold text-[24px] text-[#1a1917] tracking-tight">Modulin</span>
+              <Image
+                src="/modulin-icon-only.png"
+                alt="Modulin Icon"
+                width={40}
+                height={40}
+                className="object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]"
+              />
+              <span
+                className="font-display font-bold text-[28px] text-white tracking-tight drop-shadow-md"
+              >
+                Modulin
+              </span>
             </Link>
 
-            {/* Kanan: Tombol Masuk dengan Google */}
-            <Link
-              href="/login"
-              className="h-10 bg-[#2a7d6e] text-white text-sm font-medium rounded-[8px] px-5 py-2.5 hover:bg-[#1f6358] hover:-translate-y-px transition-all duration-200 inline-flex items-center justify-center cursor-pointer shadow-sm"
-            >
-              Masuk dengan Google
-            </Link>
+            {/* Tengah: Menu Navigasi */}
+            <nav className="hidden md:flex items-center gap-8">
+              <Link href="/" className="relative text-white text-[15px] font-bold drop-shadow-md group">
+                Beranda
+                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-100"></span>
+              </Link>
+              <Link href="/tentang" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+                Tentang
+                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
+              </Link>
+              <Link href="/editor" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+                Template
+                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
+              </Link>
+              <Link href="/fitur" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+                Fitur
+                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
+              </Link>
+            </nav>
+
+            {/* Kanan: Tombol Masuk Desktop & Hamburger */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className="hidden md:inline-flex h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full px-6 hover:bg-[#dc2626] transition-all duration-200 items-center justify-center cursor-pointer shadow-lg"
+              >
+                Masuk
+              </Link>
+              
+              {/* Hamburger Mobile */}
+              <button 
+                className="md:hidden text-white p-2 z-50"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle Menu"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
+
+          {/* Menu Navigasi Mobile Overlay */}
+          {isMobileMenuOpen && (
+            <div className="absolute top-full left-0 w-full bg-[#1a5c50] shadow-xl md:hidden border-t border-white/10 flex flex-col py-4 px-6 gap-4">
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-white text-[16px] font-bold py-2 border-b border-white/10">Beranda</Link>
+              <Link href="/tentang" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Tentang</Link>
+              <Link href="/editor" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Template</Link>
+              <Link href="/fitur" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Fitur</Link>
+              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full mt-2 flex items-center justify-center">
+                Masuk
+              </Link>
+            </div>
+          )}
         </header>
 
         <main className="flex-1">
           {/* ==================== 3. HERO SECTION ==================== */}
-          <section className="pt-16 pb-20 md:pt-24 md:pb-28 border-b border-[#e2dbd0]">
-            <div className="max-w-5xl mx-auto px-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-                {/* Kolom Kiri: 7 Kolom */}
-                <div className="lg:col-span-7">
-                  <h1 className="font-display font-semibold text-4xl sm:text-5xl lg:text-[52px] leading-[1.1] tracking-[-1px] text-[#1a1917] mb-4">
-                    3 hingga 6 jam jadi 15 menit.
-                  </h1>
-                  <p className="text-[15px] font-normal text-[#444340] leading-relaxed mb-8">
-                    Modul ajar Kurikulum Merdeka, format resmi, siap ekspor Word.
-                  </p>
+          <section className="relative h-screen overflow-hidden">
+            {/* Full-Width Background Image */}
+            <Image
+              src="/hero-banner.png"
+              alt="Modulin Hero Banner — Guru Indonesia"
+              fill
+              className="object-cover object-[85%_center] md:object-center"
+              priority
+              quality={100}
+              unoptimized={true}
+            />
 
-                  {/* CTA Buttons */}
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <Link
-                      href="/create"
-                      className="w-full sm:w-auto h-11 bg-[#2a7d6e] hover:bg-[#1f6358] text-white text-sm font-medium px-6 rounded-[8px] flex items-center justify-center gap-2 transition-all duration-200 shadow-sm cursor-pointer"
-                    >
-                      <span>Buat Modul Ajar</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    <Link
-                      href="/editor"
-                      className="w-full sm:w-auto h-11 border border-[#e2dbd0] bg-[#faf8f4] hover:bg-[#f0ebe0] text-[#1a1917] text-sm font-medium px-6 rounded-[8px] flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
-                    >
-                      <FileText className="w-4 h-4 text-[#6b6862]" />
-                      <span>Lihat Contoh Format</span>
-                    </Link>
-                  </div>
-                </div>
+            {/* Dark overlay gradient for text readability on left side */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1a5c50]/95 via-[#1a5c50]/80 md:from-[#1a5c50]/80 md:via-[#2a7d6e]/40 to-transparent z-[1]" />
 
-                {/* Kolom Kanan: 5 Kolom (AI Typing Card & Floating Badges) */}
-                <div className="lg:col-span-5 relative mt-6 lg:mt-0">
-                  {/* Floating Badge 1: Kiri Atas */}
-                  <div className="absolute -top-5 -left-2 sm:-left-4 z-20 bg-[#faf8f4] border border-[#e2dbd0] shadow-sm rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-[#1a1917] animate-float-1">
-                    <BookOpen className="w-4 h-4 text-[#2a7d6e]" />
-                    <span>Fase D Kelas 7</span>
-                  </div>
+            {/* Content Overlay */}
+            <div className="relative z-10 max-w-7xl mx-auto px-6 h-full flex items-center">
+              <div className="max-w-xl py-16 md:py-24">
+                <h1 className="font-display font-semibold text-5xl sm:text-6xl lg:text-[72px] leading-[1.08] tracking-[-2px] text-[#faf8f4] mb-4 drop-shadow-lg min-h-[160px] md:min-h-[155px]">
+                  Bikin <span className="text-[#facc15]">{heroText}</span><span className="animate-pulse">|</span><br />Tanpa Lembur.
+                </h1>
+                <p className="text-[15px] sm:text-base font-normal text-[#faf8f4]/90 leading-relaxed mb-8 drop-shadow-sm">
+                  Modul ajar Kurikulum Merdeka, format resmi, siap ekspor Word. Bantu guru Indonesia susun dokumen berkualitas tanpa lembur.
+                </p>
 
-                  {/* Floating Badge 2: Kanan Tengah */}
-                  <div className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 bg-[#faf8f4] border border-[#e2dbd0] shadow-sm rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-[#1a1917] animate-float-2">
-                    <BadgeCheck className="w-4 h-4 text-[#2a7d6e]" />
-                    <span>Format BSKAP Resmi</span>
-                  </div>
-
-                  {/* Floating Badge 3: Bawah Card */}
-                  <div className="absolute -bottom-5 left-6 sm:left-10 z-20 bg-[#faf8f4] border border-[#e2dbd0] shadow-sm rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-[#1a1917] animate-float-3">
-                    <Download className="w-4 h-4 text-[#2a7d6e]" />
-                    <span>Ekspor Word & PDF</span>
-                  </div>
-
-                  {/* Card AI Real-time Typing */}
-                  <div className="bg-[#f0ebe0] rounded-xl border border-[#e2dbd0] p-6 shadow-sm relative min-h-[300px] flex flex-col justify-between">
-                    <div>
-                      {/* Status AI Sedang Menyusun */}
-                      <div className="flex items-center gap-2 mb-5">
-                        <span className="w-2 h-2 rounded-full bg-[#2a7d6e] animate-pulse" />
-                        <span className="text-[11px] font-medium text-[#2a7d6e] tracking-normal">
-                          AI sedang menyusun...
-                        </span>
-                      </div>
-
-                      {/* Simulasi Teks Muncul Karakter demi Karakter */}
-                      <div className="space-y-4">
-                        {/* Section Label 1 & Content */}
-                        <div className="p-3 bg-[#faf8f4] rounded-lg border border-[#e2dbd0]">
-                          <span className="text-[11px] font-semibold text-[#2a7d6e] block mb-1">
-                            {currentLabel1}
-                            {activeHeroField === "label1" && (
-                              <span className="inline-block w-1.5 h-3 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
-                            )}
-                          </span>
-                          <p className="text-xs text-[#444340] leading-relaxed">
-                            {currentContent1}
-                            {activeHeroField === "content1" && (
-                              <span className="inline-block w-1.5 h-3.5 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
-                            )}
-                          </p>
-                        </div>
-
-                        {/* Section Label 2 & Content */}
-                        {(typewriterIndex > l1 + l2 || prefersReducedMotion) && (
-                          <div className="p-3 bg-[#faf8f4] rounded-lg border border-[#e2dbd0]">
-                            <span className="text-[11px] font-semibold text-[#2a7d6e] block mb-1">
-                              {currentLabel2}
-                              {activeHeroField === "label2" && (
-                                <span className="inline-block w-1.5 h-3 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
-                              )}
-                            </span>
-                            <p className="text-xs text-[#444340] leading-relaxed">
-                              {currentContent2}
-                              {(activeHeroField === "content2" ||
-                                isCompleteHero) && (
-                                <span className="inline-block w-1.5 h-3.5 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
-                              )}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-[#e2dbd0] flex items-center justify-between text-[11px] text-[#6b6862]">
-                      <span>Model: Problem-Based Learning</span>
-                      <span>Sintaks 5 Tahap</span>
-                    </div>
-                  </div>
+                {/* CTA Buttons - Premium Editorial Style */}
+                <div className="flex flex-col sm:flex-row items-center gap-5 mt-2">
+                  <Link
+                    href="/create"
+                    className="group relative w-full sm:w-auto h-14 bg-white text-[#1a5c50] text-[15px] font-bold px-9 rounded-full flex items-center justify-center gap-2.5 overflow-hidden transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.15)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.2)] hover:-translate-y-1"
+                  >
+                    <span className="relative z-10">Mulai Buat Modul</span>
+                    <ArrowRight className="w-[18px] h-[18px] relative z-10 group-hover:translate-x-1.5 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </Link>
+                  <Link
+                    href="/editor"
+                    className="group w-full sm:w-auto h-14 border border-white/30 bg-white/5 backdrop-blur-md hover:bg-white/15 text-white text-[15px] font-semibold px-9 rounded-full flex items-center justify-center gap-2.5 transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <FileText className="w-[18px] h-[18px] text-white/70 group-hover:text-white transition-colors duration-300" />
+                    <span>Lihat Contoh Format</span>
+                  </Link>
                 </div>
               </div>
             </div>
+
           </section>
 
           {/* ==================== 4. SOCIAL PROOF ==================== */}
@@ -488,10 +535,10 @@ export default function LandingPage() {
             <div className="max-w-4xl mx-auto text-center">
               <p className="text-sm font-normal text-[#444340] leading-relaxed">
                 "Rata-rata guru Indonesia menghabiskan 3 hingga 6 jam untuk
-                menyusun satu modul ajar secara manual."{" "}
-                <span className="text-xs text-[#6b6862]">
-                  (Kemendikbud, Survei Beban Administratif Guru 2023)
-                </span>
+                menyusun satu modul ajar secara manual."
+              </p>
+              <p className="text-sm text-[#6b6862] italic mt-2">
+                (Kemendikbud, Survei Beban Administratif Guru 2023)
               </p>
             </div>
           </section>
@@ -523,11 +570,10 @@ export default function LandingPage() {
                               ? "0ms"
                               : `${index * 80}ms`,
                           }}
-                          className={`flex items-start gap-3 text-sm text-[#444340] leading-relaxed transition-all duration-500 ease-out ${
-                            featuresVisible || prefersReducedMotion
+                          className={`flex items-start gap-3 text-sm text-[#444340] leading-relaxed transition-all duration-500 ease-out ${featuresVisible || prefersReducedMotion
                               ? "opacity-100 translate-y-0"
                               : "opacity-0 translate-y-4"
-                          }`}
+                            }`}
                         >
                           <X className="w-4 h-4 text-[#c4503d] shrink-0 mt-1" />
                           <span>{item}</span>
@@ -560,11 +606,10 @@ export default function LandingPage() {
                               ? "0ms"
                               : `${index * 80 + 320}ms`,
                           }}
-                          className={`flex items-start gap-3 text-sm text-[#1a1917] font-medium leading-relaxed transition-all duration-500 ease-out ${
-                            featuresVisible || prefersReducedMotion
+                          className={`flex items-start gap-3 text-sm text-[#1a1917] font-medium leading-relaxed transition-all duration-500 ease-out ${featuresVisible || prefersReducedMotion
                               ? "opacity-100 translate-y-0"
                               : "opacity-0 translate-y-4"
-                          }`}
+                            }`}
                         >
                           <Check className="w-4 h-4 text-[#2a7d6e] shrink-0 mt-1" />
                           <span>{item}</span>
@@ -596,7 +641,7 @@ export default function LandingPage() {
               {/* Tiga Panel Studio Interface Mockup */}
               <div className="bg-[#282623] rounded-xl border border-[#383531] shadow-2xl overflow-hidden">
                 {/* Topbar Editor */}
-                <div className="bg-[#121110] px-4 py-3 border-b border-[#383531] flex items-center justify-between text-xs">
+                <div className="bg-[#121110] px-4 py-3 border-b border-[#383531] flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-3">
                   <div className="flex items-center gap-3">
                     <div className="flex gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#444340]" />
@@ -673,17 +718,15 @@ export default function LandingPage() {
                   {/* Panel Tengah: Live Generating Document Canvas */}
                   <div className="md:col-span-6 bg-[#121110] p-6 flex items-center justify-center overflow-y-auto">
                     <div
-                      className={`bg-white text-[#1a1917] p-8 rounded-lg shadow-md w-full max-w-md text-xs leading-relaxed transition-opacity duration-700 ${
-                        docFadingOut ? "opacity-0" : "opacity-100"
-                      }`}
+                      className={`bg-white text-[#1a1917] p-8 rounded-lg shadow-md w-full max-w-md text-xs leading-relaxed transition-opacity duration-700 ${docFadingOut ? "opacity-0" : "opacity-100"
+                        }`}
                     >
                       {/* Block 0: Header */}
                       <div
-                        className={`border-b border-gray-200 pb-3 mb-4 text-center transition-all duration-500 ${
-                          docBlockCount >= 1
+                        className={`border-b border-gray-200 pb-3 mb-4 text-center transition-all duration-500 ${docBlockCount >= 1
                             ? "opacity-100 translate-y-0"
                             : "opacity-0 translate-y-2 pointer-events-none"
-                        }`}
+                          }`}
                       >
                         <h4 className="font-display font-semibold text-base uppercase text-black">
                           MODUL AJAR: KEGIATAN INTI
@@ -696,11 +739,10 @@ export default function LandingPage() {
                       <div className="space-y-4">
                         {/* Block 1: Tahap 1 Orientasi Masalah */}
                         <div
-                          className={`transition-all duration-500 ${
-                            docBlockCount >= 2
+                          className={`transition-all duration-500 ${docBlockCount >= 2
                               ? "opacity-100 translate-y-0"
                               : "opacity-0 translate-y-2 pointer-events-none"
-                          }`}
+                            }`}
                         >
                           <h5 className="font-semibold text-gray-900 text-[11px] mb-1">
                             Tahap 1: Orientasi Siswa pada Masalah (15 Menit)
@@ -714,11 +756,10 @@ export default function LandingPage() {
 
                         {/* Block 2: Callout Diferensiasi */}
                         <div
-                          className={`bg-[#e6f3f0] border-l-2 border-[#2a7d6e] p-2.5 rounded text-[10.5px] transition-all duration-500 ${
-                            docBlockCount >= 3
+                          className={`bg-[#e6f3f0] border-l-2 border-[#2a7d6e] p-2.5 rounded text-[10.5px] transition-all duration-500 ${docBlockCount >= 3
                               ? "opacity-100 translate-y-0"
                               : "opacity-0 translate-y-2 pointer-events-none"
-                          }`}
+                            }`}
                         >
                           <span className="font-semibold text-[#1f6358] block mb-0.5">
                             Diferensiasi Proses:
@@ -732,11 +773,10 @@ export default function LandingPage() {
 
                         {/* Block 3: Tahap 2 Mengorganisasi Siswa */}
                         <div
-                          className={`transition-all duration-500 ${
-                            docBlockCount >= 4
+                          className={`transition-all duration-500 ${docBlockCount >= 4
                               ? "opacity-100 translate-y-0"
                               : "opacity-0 translate-y-2 pointer-events-none"
-                          }`}
+                            }`}
                         >
                           <h5 className="font-semibold text-gray-900 text-[11px] mb-1">
                             Tahap 2: Mengorganisasi Siswa untuk Belajar (20
@@ -751,11 +791,10 @@ export default function LandingPage() {
 
                         {/* Block 4: Tahap 3 Penyelidikan */}
                         <div
-                          className={`transition-all duration-500 ${
-                            docBlockCount >= 5
+                          className={`transition-all duration-500 ${docBlockCount >= 5
                               ? "opacity-100 translate-y-0"
                               : "opacity-0 translate-y-2 pointer-events-none"
-                          }`}
+                            }`}
                         >
                           <h5 className="font-semibold text-gray-900 text-[11px] mb-1">
                             Tahap 3: Membimbing Penyelidikan Mandiri dan Kelompok
@@ -851,28 +890,26 @@ export default function LandingPage() {
               </div>
 
               {/* Stepper Tabs Bar */}
-              <div className="max-w-3xl mx-auto mb-10">
-                <div className="flex items-center justify-between relative">
+              <div className="max-w-3xl mx-auto mb-10 overflow-x-auto pb-4 scrollbar-hide">
+                <div className="flex items-center justify-between relative min-w-[600px] px-2">
                   {/* Step 1 Tab Button */}
                   <button
                     onClick={() => {
                       setAutoAdvance(false);
                       setActiveStep(0);
                     }}
-                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
-                      activeStep === 0
+                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeStep === 0
                         ? "bg-[#2a7d6e] text-white shadow-sm"
                         : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
-                    }`}
+                      }`}
                   >
                     <span>01. Isi Identitas Modul</span>
                   </button>
 
                   {/* Connector Line 1 */}
                   <div
-                    className={`flex-1 h-0.5 mx-2 transition-colors duration-300 ${
-                      activeStep >= 1 ? "bg-[#2a7d6e]" : "bg-[#e2dbd0]"
-                    }`}
+                    className={`flex-1 h-0.5 mx-2 transition-colors duration-300 ${activeStep >= 1 ? "bg-[#2a7d6e]" : "bg-[#e2dbd0]"
+                      }`}
                   />
 
                   {/* Step 2 Tab Button */}
@@ -881,20 +918,18 @@ export default function LandingPage() {
                       setAutoAdvance(false);
                       setActiveStep(1);
                     }}
-                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
-                      activeStep === 1
+                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeStep === 1
                         ? "bg-[#2a7d6e] text-white shadow-sm"
                         : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
-                    }`}
+                      }`}
                   >
                     <span>02. Pilih Model Pembelajaran</span>
                   </button>
 
                   {/* Connector Line 2 */}
                   <div
-                    className={`flex-1 h-0.5 mx-2 transition-colors duration-300 ${
-                      activeStep >= 2 ? "bg-[#2a7d6e]" : "bg-[#e2dbd0]"
-                    }`}
+                    className={`flex-1 h-0.5 mx-2 transition-colors duration-300 ${activeStep >= 2 ? "bg-[#2a7d6e]" : "bg-[#e2dbd0]"
+                      }`}
                   />
 
                   {/* Step 3 Tab Button */}
@@ -903,11 +938,10 @@ export default function LandingPage() {
                       setAutoAdvance(false);
                       setActiveStep(2);
                     }}
-                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
-                      activeStep === 2
+                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeStep === 2
                         ? "bg-[#2a7d6e] text-white shadow-sm"
                         : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
-                    }`}
+                      }`}
                   >
                     <span>03. Unduh Dokumen</span>
                   </button>
@@ -1118,11 +1152,10 @@ export default function LandingPage() {
                       <button
                         key={model.id}
                         onClick={() => setSelectedModelId(model.id)}
-                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm transition-all duration-150 rounded-r-md cursor-pointer block ${
-                          isActive
+                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm transition-all duration-150 rounded-r-md cursor-pointer block ${isActive
                             ? "bg-[#e6f3f0] border-l-[3px] border-[#2a7d6e] text-[#1a1917] font-medium"
                             : "bg-transparent text-[#6b6862] hover:bg-[#f0ebe0] border-l-[3px] border-transparent"
-                        }`}
+                          }`}
                       >
                         {model.name}
                       </button>
@@ -1133,7 +1166,7 @@ export default function LandingPage() {
                 {/* Kolom Kanan: Panel Detail Model yang Dipilih */}
                 <div
                   key={selectedModel.id}
-                  className="lg:col-span-8 bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 sm:p-8 shadow-sm animate-step-enter"
+                  className="lg:col-span-8 bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 sm:p-8 shadow-sm animate-step-enter overflow-hidden"
                 >
                   <h3 className="font-display font-semibold text-[28px] text-[#1a1917] leading-tight mb-2">
                     {selectedModel.name}
@@ -1179,87 +1212,86 @@ export default function LandingPage() {
           </section>
 
           {/* ==================== 9. CTA PENUTUP ==================== */}
-          <section className="py-20 md:py-24 bg-[#f0ebe0] border-t border-[#e2dbd0]">
-            <div className="max-w-4xl mx-auto px-6 text-center">
-              <h2 className="font-display font-semibold text-3xl sm:text-5xl tracking-tight text-[#1a1917] mb-4">
+          <section className="relative py-12 md:py-14 border-t border-[#e2dbd0] overflow-hidden">
+            {/* Background Image & Overlay */}
+            <div className="absolute inset-0 z-0">
+              <Image 
+                src="/cta-background.jpg" 
+                alt="Indonesian Teacher" 
+                fill
+                className="object-cover object-center"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1917]/95 via-[#1a5c50]/90 to-[#1a1917]/95"></div>
+            </div>
+
+            <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+              <h2 className="font-display font-bold text-3xl sm:text-5xl tracking-tight text-white mb-6 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
                 Guru-guru Indonesia tidak punya waktu untuk format yang salah.
               </h2>
-              <p className="text-base text-[#444340] max-w-2xl mx-auto leading-relaxed mb-8">
+              <p className="text-lg sm:text-xl font-medium text-white max-w-2xl mx-auto leading-relaxed mb-10 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                 Modulin menyusunnya dalam format yang benar, dalam waktu yang
                 jauh lebih singkat.
               </p>
 
-              <div className="flex justify-center mb-6">
+              <div className="flex justify-center mb-8">
                 <Link
                   href="/create"
-                  className="bg-[#2a7d6e] hover:bg-[#1f6358] text-white text-base font-medium px-8 py-3.5 rounded-[8px] transition-all duration-200 inline-flex items-center justify-center shadow-sm cursor-pointer"
+                  className="bg-white hover:bg-gray-100 text-[#1a5c50] text-[15px] font-bold px-10 py-4 rounded-full transition-all duration-300 inline-flex items-center justify-center shadow-[0_8px_30px_rgba(255,255,255,0.2)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.3)] hover:-translate-y-1 cursor-pointer"
                 >
                   Mulai Sekarang, Gratis
                 </Link>
               </div>
 
-              {/* Tiga Item Kecil Inline */}
-              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-[#6b6862]">
-                <span>Tidak perlu kartu kredit</span>
-                <span>•</span>
-                <span>Login dengan akun Google</span>
-                <span>•</span>
-                <span>Data tersimpan aman di Supabase</span>
-              </div>
             </div>
           </section>
         </main>
 
         {/* ==================== FOOTER ==================== */}
-        <footer className="bg-[#1c1b18] border-t border-[#282623] py-12 mt-auto">
-          <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Logo & Copyright */}
-            <div className="flex flex-col items-center md:items-start text-center md:text-left">
-              <Link
-                href="/"
-                className="flex items-center gap-2 mb-2"
-              >
-                <Image src="/modulin-logo-2.png" alt="Modulin Logo" width={32} height={32} className="rounded-md object-contain" />
-                <span className="font-display font-semibold text-2xl text-[#faf8f4]">Modulin</span>
-              </Link>
-              <p className="text-xs text-[#a09b93] max-w-sm leading-relaxed">
-                © 2026 Modulin. Perangkat ajar berstandar Kurikulum Merdeka.
-              </p>
+        <footer className="bg-[#121110] pt-20 pb-8 mt-auto border-t border-[#1a1917]">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-16">
+              {/* Brand Column */}
+              <div className="col-span-1 md:col-span-2">
+                <Link href="/" className="flex items-center gap-3 mb-6">
+                  <Image src="/modulin-icon-only.png" alt="Modulin Icon" width={40} height={40} className="object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                  <span className="font-display font-bold text-3xl text-white tracking-tight">Modulin</span>
+                </Link>
+                <p className="text-[14px] text-gray-400 max-w-sm leading-relaxed">
+                  Platform cerdas untuk membantu Guru Indonesia menyusun Modul Ajar dan RPP berstandar Kurikulum Merdeka secara otomatis, cepat, dan presisi.
+                </p>
+              </div>
+
+              {/* Links Column 1 */}
+              <div>
+                <h4 className="text-white font-semibold text-[13px] uppercase tracking-widest mb-6">Produk</h4>
+                <ul className="space-y-4">
+                  <li><Link href="/create" className="text-gray-400 hover:text-white text-[14px] transition-colors">Generator Modul Ajar</Link></li>
+                  <li><Link href="/editor" className="text-gray-400 hover:text-white text-[14px] transition-colors">Template Resmi BSKAP</Link></li>
+                  <li><Link href="/fitur" className="text-gray-400 hover:text-white text-[14px] transition-colors">Asisten Pedagogik</Link></li>
+                </ul>
+              </div>
+
+              {/* Links Column 2 */}
+              <div>
+                <h4 className="text-white font-semibold text-[13px] uppercase tracking-widest mb-6">Dukungan</h4>
+                <ul className="space-y-4">
+                  <li><Link href="/tentang" className="text-gray-400 hover:text-white text-[14px] transition-colors">Bantuan Guru (FAQ)</Link></li>
+                  <li><Link href="/kebijakan-privasi" className="text-gray-400 hover:text-white text-[14px] transition-colors">Kebijakan Privasi</Link></li>
+                  <li><Link href="/syarat-ketentuan" className="text-gray-400 hover:text-white text-[14px] transition-colors">Syarat & Ketentuan</Link></li>
+                </ul>
+              </div>
             </div>
 
-            {/* Footer Navigation Links */}
-            <nav className="flex flex-wrap justify-center gap-6 text-xs text-[#a09b93]">
-              <Link
-                href="#"
-                className="hover:text-[#2a7d6e] transition-colors duration-200"
-              >
-                Tentang Kami
-              </Link>
-              <Link
-                href="#"
-                className="hover:text-[#2a7d6e] transition-colors duration-200"
-              >
-                Panduan Kurikulum Merdeka
-              </Link>
-              <Link
-                href="#"
-                className="hover:text-[#2a7d6e] transition-colors duration-200"
-              >
-                Kebijakan Privasi
-              </Link>
-              <Link
-                href="#"
-                className="hover:text-[#2a7d6e] transition-colors duration-200"
-              >
-                Syarat & Ketentuan
-              </Link>
-              <Link
-                href="#"
-                className="hover:text-[#2a7d6e] transition-colors duration-200"
-              >
-                Bantuan Guru
-              </Link>
-            </nav>
+            {/* Bottom Copyright */}
+            <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-[13px] text-gray-500">
+                © {new Date().getFullYear()} Modulin by Exploraition. Hak Cipta Dilindungi.
+              </p>
+              <div className="flex items-center gap-6 text-[13px] text-gray-500">
+                <span>Dibuat oleh tim S.Kom-EDI</span>
+              </div>
+            </div>
           </div>
         </footer>
       </div>

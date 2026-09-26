@@ -506,63 +506,66 @@ export default function DashboardPage() {
         </div>
 
         {/* ==================== ZONA 3: PENDUKUNG ==================== */}
-        
-        {/* 3A. Section Model Pembelajaran */}
-        <div className={`mb-16 ${fadeItem(6)}`}>
-          <div className="mb-4">
-            <h3 className="text-[11px] font-inter uppercase tracking-wide text-[#6b6862]">Mulai dengan Model Pembelajaran</h3>
-            <p className="text-[13px] font-inter text-[#a09b93]">Pilih model dan langsung buat modul baru.</p>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {models.map((m) => (
-              <div 
-                key={m.code}
-                onClick={() => router.push(`/create?model=${m.code}`)}
-                className="group bg-[#faf8f4] border border-[#e2dbd0] rounded-lg p-4 md:px-5 md:py-4 cursor-pointer hover:border-[#2a7d6e] hover:bg-[#e6f3f0] hover:-translate-y-[2px] transition-all duration-150 flex flex-col"
-              >
-                <div className="text-[10px] font-inter uppercase text-[#2a7d6e] font-semibold mb-2">{m.label}</div>
-                <div className="font-display text-[18px] font-semibold text-[#1a1917] mb-1">{m.name}</div>
-                <div className="text-[12px] font-inter text-[#a09b93] line-clamp-1 mb-3 flex-1">{m.desc}</div>
-                <div className="self-end mt-auto text-[#2a7d6e]">
-                  <ArrowRight size={14} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 3B. Section Panduan Cepat */}
-        <div className={fadeItem(7)}>
-          <div className="mb-4">
-            <h3 className="text-[11px] font-inter uppercase tracking-wide text-[#6b6862]">Panduan Cepat</h3>
-            <p className="text-[13px] font-inter text-[#a09b93]">Pertanyaan umum seputar Kurikulum Merdeka.</p>
-          </div>
-
-          <div className="border-t border-[#e2dbd0]">
-            {faqs.map((faq, idx) => {
-              const isOpen = openAccordion === idx;
-              return (
-                <div key={idx} className="border-b border-[#e2dbd0] py-4">
-                  <button 
-                    onClick={() => setOpenAccordion(isOpen ? null : idx)}
-                    className="w-full flex items-center justify-between text-left focus:outline-none"
-                  >
-                    <span className="text-[14px] font-inter font-medium text-[#1a1917] pr-4">{faq.q}</span>
-                    <ChevronDown size={16} className={`text-[#a09b93] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  <div 
-                    className="overflow-hidden transition-all duration-300 ease-in-out"
-                    style={{ maxHeight: isOpen ? "200px" : "0px", opacity: isOpen ? 1 : 0 }}
-                  >
-                    <p className="text-[13px] font-inter text-[#444340] leading-[1.7] pt-2 pb-1">
-                      {faq.a}
-                    </p>
+          {/* 3A. Section Model Pembelajaran */}
+          <div className={`lg:col-span-7 ${fadeItem(6)}`}>
+            <div className="mb-4">
+              <h3 className="text-[11px] font-inter uppercase tracking-wide text-[#6b6862]">Mulai dengan Model Pembelajaran</h3>
+              <p className="text-[13px] font-inter text-[#a09b93]">Pilih model dan langsung buat modul baru.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {models.map((m) => (
+                <div 
+                  key={m.code}
+                  onClick={() => router.push(`/create?model=${m.code}`)}
+                  className="group bg-[#faf8f4] border border-[#e2dbd0] rounded-lg p-4 md:px-5 md:py-4 cursor-pointer hover:border-[#2a7d6e] hover:bg-[#e6f3f0] hover:-translate-y-[2px] transition-all duration-150 flex flex-col"
+                >
+                  <div className="text-[10px] font-inter uppercase text-[#2a7d6e] font-semibold mb-2">{m.label}</div>
+                  <div className="font-display text-[18px] font-semibold text-[#1a1917] mb-1">{m.name}</div>
+                  <div className="text-[12px] font-inter text-[#a09b93] line-clamp-1 mb-3 flex-1">{m.desc}</div>
+                  <div className="self-end mt-auto text-[#2a7d6e]">
+                    <ArrowRight size={14} />
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
+
+          {/* 3B. Section Panduan Cepat */}
+          <div className={`lg:col-span-5 ${fadeItem(7)}`}>
+            <div className="mb-4">
+              <h3 className="text-[11px] font-inter uppercase tracking-wide text-[#6b6862]">Panduan Cepat</h3>
+              <p className="text-[13px] font-inter text-[#a09b93]">Pertanyaan umum seputar Kurikulum Merdeka.</p>
+            </div>
+
+            <div className="border-t border-[#e2dbd0]">
+              {faqs.map((faq, idx) => {
+                const isOpen = openAccordion === idx;
+                return (
+                  <div key={idx} className="border-b border-[#e2dbd0] py-4">
+                    <button 
+                      onClick={() => setOpenAccordion(isOpen ? null : idx)}
+                      className="w-full flex items-center justify-between text-left focus:outline-none"
+                    >
+                      <span className="text-[14px] font-inter font-medium text-[#1a1917] pr-4">{faq.q}</span>
+                      <ChevronDown size={16} className={`text-[#a09b93] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div 
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{ maxHeight: isOpen ? "200px" : "0px", opacity: isOpen ? 1 : 0 }}
+                    >
+                      <p className="text-[13px] font-inter text-[#444340] leading-[1.7] pt-2 pb-1">
+                        {faq.a}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
 
       </div>

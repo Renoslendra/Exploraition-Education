@@ -94,7 +94,7 @@ const INITIAL_IDENTITY: IdentityData = {
 function StepDots({ step }: { step: number }) {
   const labels = ["Model", "Identitas", "Generate"];
   return (
-    <div className="flex items-center gap-2 mb-6">
+    <div className="flex items-center justify-center gap-2 mb-6">
       {labels.map((l, i) => {
         const n = i + 1;
         const done = n < step;
@@ -145,26 +145,28 @@ function ModelSelect({
       <StepDots step={1} />
 
       {/* Header */}
-      <h1 className="font-display text-[40px] font-semibold text-[#1a1917] mb-2 tracking-[-0.8px]">
-        Pilih Model Pembelajaran
-      </h1>
-      <p className="text-[#6b6862] text-[15px] mb-6 max-w-2xl">
-        Model menentukan alur kegiatan pembelajaran yang akan disusun AI. Baca karakteristik
-        tiap model, lalu pilih yang paling sesuai dengan materi bab Anda.
-      </p>
-
-      {/* PBL vs PjBL callout */}
-      <div className="mb-8 rounded-md bg-[#e6f3f0] border-l-[3px] border-[#2a7d6e] p-4 flex gap-3 text-[13px] text-[#444340] max-w-2xl">
-        <GitCompareArrows size={18} className="text-[#2a7d6e] shrink-0 mt-0.5" />
-        <p>
-          <strong className="font-medium text-[#1a1917]">PBL vs PjBL:</strong> keduanya berbasis
-          masalah, tetapi{" "}
-          <strong className="font-medium">PBL berhenti di solusi/ide</strong>, sedangkan{" "}
-          <strong className="font-medium">
-            PjBL berlanjut hingga menghasilkan produk nyata
-          </strong>{" "}
-          (artefak, presentasi, prototipe).
+      <div className="text-center">
+        <h1 className="font-display text-[40px] font-bold text-[#1a1917] mb-3 tracking-[-0.8px]">
+          Pilih Model Pembelajaran
+        </h1>
+        <p className="text-[#444340] text-[16px] font-medium mb-6 max-w-2xl mx-auto leading-relaxed">
+          Model menentukan alur kegiatan pembelajaran yang akan disusun AI. Baca karakteristik
+          tiap model, lalu pilih yang paling sesuai dengan materi bab Anda.
         </p>
+
+        {/* PBL vs PjBL callout */}
+        <div className="mb-8 rounded-md bg-[#e6f3f0] border-l-[3px] border-[#2a7d6e] p-4 flex gap-3 text-[14px] font-medium text-[#1a1917] max-w-2xl mx-auto text-left leading-relaxed">
+          <GitCompareArrows size={20} className="text-[#2a7d6e] shrink-0 mt-0.5" />
+          <p>
+            <strong className="font-bold text-[#1a1917]">PBL vs PjBL:</strong> keduanya berbasis
+            masalah, tetapi{" "}
+            <strong className="font-bold">PBL berhenti di solusi/ide</strong>, sedangkan{" "}
+            <strong className="font-bold">
+              PjBL berlanjut hingga menghasilkan produk nyata
+            </strong>{" "}
+            (artefak, presentasi, prototipe).
+          </p>
+        </div>
       </div>
 
       {/* Model cards grid */}
@@ -192,7 +194,7 @@ function ModelSelect({
             >
               {/* Header: abbr + radio */}
               <div className="flex items-start justify-between mb-1">
-                <span className="font-display text-[40px] font-semibold text-[#1a1917] leading-none tracking-tight">
+                <span className="font-display text-[40px] font-bold text-[#1a1917] leading-none tracking-tight">
                   {m.abbr}
                 </span>
                 <span
@@ -208,28 +210,28 @@ function ModelSelect({
               </div>
 
               {/* Nama model teal */}
-              <div className="text-[13px] font-medium text-[#2a7d6e] mb-3">
+              <div className="text-[14px] font-bold text-[#2a7d6e] mb-3">
                 {m.name}
               </div>
 
               {/* Deskripsi */}
-              <p className="text-[14px] text-[#1a1917] leading-relaxed mb-4">
+              <p className="text-[15px] font-medium text-[#2a2926] leading-relaxed mb-4">
                 {m.desc}
               </p>
 
               {/* Hasil akhir + Cocok untuk */}
-              <div className="space-y-2 mb-4">
-                <div className="flex gap-3 text-[12.5px]">
-                  <span className="text-[#908c84] shrink-0 w-[68px] leading-relaxed">
+              <div className="space-y-3 mb-5">
+                <div className="flex gap-3 text-[13px]">
+                  <span className="font-bold text-[#1a1917] shrink-0 w-[74px] leading-relaxed">
                     Hasil akhir
                   </span>
-                  <span className="text-[#2a2926] leading-relaxed">{m.outcome}</span>
+                  <span className="font-medium text-[#444340] leading-relaxed">{m.outcome}</span>
                 </div>
-                <div className="flex gap-3 text-[12.5px]">
-                  <span className="text-[#908c84] shrink-0 w-[68px] leading-relaxed">
+                <div className="flex gap-3 text-[13px]">
+                  <span className="font-bold text-[#1a1917] shrink-0 w-[74px] leading-relaxed">
                     Cocok untuk
                   </span>
-                  <span className="text-[#444340] leading-relaxed">{m.bestFor}</span>
+                  <span className="font-medium text-[#444340] leading-relaxed">{m.bestFor}</span>
                 </div>
               </div>
 
@@ -339,13 +341,15 @@ function IdentityForm({
       <StepDots step={2} />
 
       {/* Header */}
-      <h1 className="font-display text-[40px] font-semibold text-[#1a1917] mb-2 tracking-[-0.8px]">
-        Identitas Perangkat Ajar
-      </h1>
-      <p className="text-[#6b6862] text-[15px] mb-8">
-        Data ini menjadi konteks bagi AI. Fase terisi otomatis dari jenjang dan kelas.{" "}
-        <span className="text-[#2a7d6e] font-medium">Model: {modelName}</span>
-      </p>
+      <div className="text-center">
+        <h1 className="font-display text-[40px] font-bold text-[#1a1917] mb-3 tracking-[-0.8px]">
+          Identitas Perangkat Ajar
+        </h1>
+        <p className="text-[#444340] text-[16px] font-medium mb-8 leading-relaxed max-w-2xl mx-auto">
+          Data ini menjadi konteks bagi AI. Fase terisi otomatis dari jenjang dan kelas.{" "}
+          <span className="text-[#2a7d6e] font-bold">Model: {modelName}</span>
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="flex justify-center w-full">
         <div className="w-full max-w-[640px] bg-[#f0ebe0] rounded-[16px] p-8 border border-[#e2dbd0] space-y-6 shadow-sm">

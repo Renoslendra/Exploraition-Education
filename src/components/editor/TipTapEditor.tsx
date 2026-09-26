@@ -81,10 +81,10 @@ export default function TipTapEditor({
   }
 
   return (
-    <div className="w-full flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-surface-dark-elevated shadow-sm">
+    <div className="w-full flex flex-col bg-surface-dark rounded-xl border border-surface-dark-elevated shadow-sm">
 
       {/* TOOLBAR */}
-      <div className="bg-[#282623] border-b border-surface-dark-soft px-4 py-2.5 flex flex-wrap gap-1 sticky top-[112px] z-30">
+      <div className="bg-[#282623] border-b border-surface-dark-soft px-4 py-2.5 flex flex-wrap gap-1 sticky top-[112px] z-50 rounded-t-xl">
         <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} disabled={!editor.can().chain().focus().toggleBold().run()} aria-label="Format Text Bold">
           <Bold size={18} />
         </ToolbarButton>
@@ -133,7 +133,7 @@ export default function TipTapEditor({
       </div>
 
       {/* EDITOR CONTENT */}
-      <div className="p-8 md:p-12 min-h-[600px] bg-surface-dark">
+      <div className="p-8 md:p-12 min-h-[600px] bg-surface-dark relative z-10 rounded-b-xl">
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -1,56 +1,82 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="min-h-[72px] py-2 bg-canvas border-b border-hairline sticky top-0 z-50 flex items-center">
-      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+    <header className="sticky top-0 left-0 w-full z-50 h-[64px] bg-[#1a5c50]/90 backdrop-blur-md shadow-lg py-2 flex items-center">
+      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 h-full flex items-center justify-between">
+        {/* Kiri: Logotype Modulin */}
+        <Link href="/" className="flex items-center gap-2 md:gap-3 transition-transform hover:scale-105 duration-200">
           <Image
-            src="/modulin-logo.png"
-            alt="Modulin Logo"
-            width={60}
-            height={60}
-            className="object-contain"
+            src="/modulin-icon-only.png"
+            alt="Modulin Icon"
+            width={32}
+            height={32}
+            className="object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.7)] md:w-[40px] md:h-[40px]"
           />
-          <span className="font-display text-[26px] font-semibold tracking-[-0.2px] text-ink">
+          <span className="font-display font-bold text-[22px] md:text-[28px] text-white tracking-tight drop-shadow-md">
             Modulin
           </span>
         </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6 h-[56px]">
-          <Link
-            href="/dashboard"
-            className={`text-[14px] font-medium transition-colors flex items-center h-full hover:text-primary ${pathname === "/dashboard" ? "text-primary border-b-2 border-primary" : "text-muted"}`}
-          >
-            Dashboard
+        {/* Tengah: Menu Navigasi Desktop */}
+        <nav className="hidden md:flex items-center gap-8">
+          <Link href="/" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+            Beranda
+            <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
           </Link>
-          <Link
-            href="/create"
-            className={`text-[14px] font-medium transition-colors flex items-center h-full hover:text-primary ${pathname === "/create" ? "text-primary border-b-2 border-primary" : "text-muted"}`}
-          >
-            Buat Modul
+          <Link href="/tentang" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+            Tentang
+            <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
           </Link>
-        </div>
+          <Link href="/editor" className="relative text-white text-[15px] font-bold drop-shadow-md group">
+            Template
+            <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-100"></span>
+          </Link>
+          <Link href="/fitur" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+            Fitur
+            <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
+          </Link>
+        </nav>
 
-        {/* Profile (Dummy) */}
+        {/* Kanan: Tombol Masuk Desktop & Hamburger */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-primary-light text-primary flex items-center justify-center text-sm font-semibold">
-            PA
-          </div>
-          <span className="text-[14px] font-medium text-ink hidden md:block">
-            Pak Andi
-          </span>
+          <Link
+            href="/login"
+            className="hidden md:inline-flex h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full px-6 hover:bg-[#dc2626] transition-all duration-200 items-center justify-center cursor-pointer shadow-lg"
+          >
+            Masuk
+          </Link>
+
+          {/* Hamburger Mobile */}
+          <button 
+            className="md:hidden text-white p-2"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
-    </nav>
+
+      {/* Menu Navigasi Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-[64px] left-0 w-full bg-[#1a5c50] shadow-xl md:hidden border-t border-white/10 flex flex-col py-4 px-6 gap-4">
+          <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Beranda</Link>
+          <Link href="/tentang" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Tentang</Link>
+          <Link href="/editor" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-white text-[16px] font-bold py-2 border-b border-white/10">Template</Link>
+          <Link href="/fitur" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Fitur</Link>
+          <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full mt-2 flex items-center justify-center">
+            Masuk
+          </Link>
+        </div>
+      )}
+    </header>
   );
 }

@@ -284,6 +284,10 @@ html {
   color: var(--color-on-dark);
 }
 
+.ProseMirror > *:first-child {
+  margin-top: 0;
+}
+
 .ProseMirror h1 {
   font-size: 32px;
   line-height: 1.2;
