@@ -27,6 +27,15 @@ export const metadata: Metadata = {
     "RPP",
     "pendidikan Indonesia",
   ],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Modulin",
+  },
+  other: {
+    "application-name": "Modulin",
+  },
 };
 
 export default function RootLayout({
@@ -36,9 +45,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
+      <head>
+        <meta name="theme-color" content="#2a7d6e" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Modulin" />
+      </head>
       <body className={`${inter.variable} ${cormorant.variable} antialiased`}>
         {children}
       </body>
     </html>
   );
 }
+
