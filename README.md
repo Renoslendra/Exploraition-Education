@@ -1,0 +1,2 @@
+# Exploraition-Education
+Hackthon eksploraition
