@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   BookOpen,
   Sparkles,
@@ -10,7 +11,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Zap,
-  GraduationCap,
   Menu,
   X,
 } from "lucide-react";
@@ -76,9 +76,13 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white" />
-              </div>
+              <Image 
+                src="/modulin-logo.png" 
+                alt="Modulin Logo" 
+                width={44} 
+                height={44}
+                className="object-contain hover:scale-105 transition-transform"
+              />
               <span
                 className="text-xl font-bold"
                 style={{ fontFamily: "var(--font-heading)" }}
