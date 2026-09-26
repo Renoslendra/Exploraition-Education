@@ -184,10 +184,16 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
       if (mode === "masuk") {
         try {
           const client = getSupabaseClient();
-          const { error } = await client.auth.signInWithPassword({ email, password });
+          const { data, error } = await client.auth.signInWithPassword({ email, password });
           if (error) console.warn("Supabase auth note:", error.message);
+          const isDemo = email.includes("demo");
+          const userName = data?.user?.user_metadata?.full_name || (isDemo ? "Guru Demo Modulin" : email.split("@")[0]);
+          localStorage.setItem("modulin_user_name", userName);
+          localStorage.setItem("modulin_user_role", isDemo ? "Pendidik (Akun Demo)" : "Guru Pengajar");
         } catch (e) {
           console.warn("Using demo login mode:", e);
+          localStorage.setItem("modulin_user_name", "Guru Demo Modulin");
+          localStorage.setItem("modulin_user_role", "Pendidik (Akun Demo)");
         }
         localStorage.setItem("modulin_logged_in", "true");
         window.location.href = "/dashboard";

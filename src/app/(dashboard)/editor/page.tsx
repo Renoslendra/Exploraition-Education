@@ -9,8 +9,8 @@ import type { StructuredModulAjarData } from "@/types/modul";
 
 const DEFAULT_FALLBACK_DATA: StructuredModulAjarData = {
   informasiUmum: {
-    namaPenyusun: "Ahmad Faozan, S.Pd.I",
-    namaInstitusi: "SMK Mabdaul Falah Al-Hasyimi",
+    namaPenyusun: "Guru Pengajar, S.Pd",
+    namaInstitusi: "SMA / SMK Negeri",
     mataPelajaran: "Bahasa Inggris",
     tahunPenyusunan: "2026",
     jenjangSekolah: "SMK",
@@ -145,12 +145,12 @@ const DEFAULT_FALLBACK_DATA: StructuredModulAjarData = {
   lembarPengesahan: {
     kotaTanggal: "Jepara, 15 Juli 2026",
     kepalaSekolah: {
-      nama: "M. Lutfi Sholeh, S.Pd.I",
+      nama: "Kepala Sekolah, M.Pd",
       nip: "-",
-      jabatan: "Kepala SMK Mabdaul Falah Al Hasyimi",
+      jabatan: "Kepala Sekolah",
     },
     guruPengajar: {
-      nama: "Ahmad Faozan, S.Pd.I",
+      nama: "Guru Pengajar, S.Pd",
       nip: "-",
       jabatan: "Guru Mata Pelajaran",
     },

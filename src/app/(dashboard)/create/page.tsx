@@ -364,7 +364,7 @@ function IdentityForm({
                 required
                 value={identityData.namaGuru}
                 onChange={(e) => handleChange("namaGuru", e.target.value)}
-                placeholder="Contoh: Ahmad Faozan, S.Pd"
+                placeholder="Contoh: Nama Lengkap & Gelar (e.g. S.Pd)"
                 className={inputClass}
               />
             </div>
@@ -719,6 +719,13 @@ function CreatePageContent() {
     const qModel = searchParams.get("model");
     if (qModel && MODELS.some((m) => m.id === qModel)) {
       setSelectedModel(qModel);
+    }
+    const savedName = typeof window !== "undefined" ? localStorage.getItem("modulin_user_name") : null;
+    if (savedName) {
+      setIdentityData((prev) => ({
+        ...prev,
+        namaGuru: prev.namaGuru || savedName,
+      }));
     }
   }, [searchParams]);
 
