@@ -196,19 +196,20 @@ export default function OfficialTablePreview({
         className="w-full max-w-4xl bg-white text-black p-8 sm:p-12 rounded-lg shadow-xl border border-gray-300 print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-full font-serif"
         style={{ fontFamily: '"Times New Roman", Times, serif' }}
       >
+        {/* Running Header (Mirrors reference PDF) */}
+        <div className="flex justify-between items-center text-[11px] italic text-gray-500 border-b border-gray-200 pb-2 mb-6">
+          <span>Template Modul Ajar</span>
+          <span>{informasiUmum.namaInstitusi || "Kurikulum Merdeka"}</span>
+        </div>
+
         {/* Document Header */}
         <div className="text-center mb-6">
           <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-gray-950 mb-1">
-            MODUL AJAR {informasiUmum.jenjangSekolah || "PENDIDIKAN"} {informasiUmum.kelas ? `KELAS ${informasiUmum.kelas}` : ""}
+            MODUL AJAR {informasiUmum.mataPelajaran ? informasiUmum.mataPelajaran.toUpperCase() : ""} {informasiUmum.jenjangSekolah || "SMP/SMA/SMK"} {informasiUmum.kelas ? `KELAS ${informasiUmum.kelas}` : ""}
           </h1>
           <h2 className="text-lg sm:text-xl font-bold text-[#1f6358] uppercase tracking-wide">
             KURIKULUM MERDEKA
           </h2>
-          {informasiUmum.mataPelajaran && (
-            <p className="text-base font-semibold text-gray-800 mt-1">
-              Mata Pelajaran: {informasiUmum.mataPelajaran}
-            </p>
-          )}
         </div>
 
         {/* 10-Component Table */}

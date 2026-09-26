@@ -11,6 +11,7 @@ import {
   BorderStyle,
   HeadingLevel,
   ShadingType,
+  Header,
 } from "docx";
 import type { StructuredModulAjarData } from "@/types/modul";
 
@@ -342,6 +343,31 @@ export async function generateDocxModulAjar(
             },
           },
         },
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.BOTH,
+                children: [
+                  new TextRun({
+                    text: "Template Modul Ajar",
+                    italics: true,
+                    size: 18, // 9pt
+                    color: "777777",
+                    font: FONT_FAMILY,
+                  }),
+                  new TextRun({
+                    text: `\t${informasiUmum.namaInstitusi || "Kurikulum Merdeka"}`,
+                    italics: true,
+                    size: 18,
+                    color: "777777",
+                    font: FONT_FAMILY,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
         children: [
           // Header Judul Dokumen
           new Paragraph({
@@ -350,7 +376,7 @@ export async function generateDocxModulAjar(
             spacing: { before: 0, after: 100 },
             children: [
               new TextRun({
-                text: `MODUL AJAR ${informasiUmum.jenjangSekolah.toUpperCase()} ${informasiUmum.kelas.toUpperCase()}`,
+                text: `MODUL AJAR ${informasiUmum.mataPelajaran ? informasiUmum.mataPelajaran.toUpperCase() + " " : ""}${informasiUmum.jenjangSekolah.toUpperCase()} ${informasiUmum.kelas ? "KELAS " + informasiUmum.kelas.toUpperCase() : ""}`,
                 bold: true,
                 font: FONT_FAMILY,
                 size: 28, // 14pt

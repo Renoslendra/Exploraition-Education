@@ -167,8 +167,8 @@ interface FormPanelProps {
 
 function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("guru.demo@modulin.id");
+  const [password, setPassword] = useState("PasswordModulin2026!");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -407,19 +407,6 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
                     <span>Masuk dengan Google</span>
                   </>
                 )}
-              </button>
-
-              {/* Quick Demo Login Button for instant access */}
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.setItem("modulin_logged_in", "true");
-                  window.location.href = "/dashboard";
-                }}
-                className="w-full mt-3 h-10 bg-[#f0ebe0] hover:bg-[#e8e1d3] border border-[#e2dbd0] rounded-[12px] text-[13px] font-medium text-[#444340] flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer"
-                title="Bypass login langsung untuk presentasi & pengujian hackathon"
-              >
-                <span>⚡ Masuk Cepat (Mode Demo / Juri)</span>
               </button>
             </>
           )}
