@@ -21,8 +21,48 @@ import {
   Send,
   ArrowRight,
   ChevronDown,
-  Menu
+  Menu,
+  Sparkles
 } from "lucide-react";
+
+/* Data Partner & Penyelenggara Event */
+const EVENT_PARTNERS = [
+  {
+    name: "Exploration",
+    role: "Penyelenggara Event",
+    logo: "/exploration-logo-full-color.png",
+    width: 140,
+    height: 44,
+  },
+  {
+    name: "Dinas Pendidikan SBY",
+    role: "Dukungan Instansi",
+    logo: "/dispendik-sby.png",
+    width: 120,
+    height: 48,
+  },
+  {
+    name: "Jagoan Hosting",
+    role: "Cloud & Hosting Partner",
+    logo: "/jagoan-hosting.png",
+    width: 140,
+    height: 38,
+  },
+  {
+    name: "Ngalup.co",
+    role: "Collaborative Ecosystem",
+    logo: "/logo-ngalup.webp",
+    width: 130,
+    height: 40,
+  },
+  {
+    name: "Maspion IT",
+    role: "Technology Partner",
+    logo: "/maspion-it.png",
+    width: 130,
+    height: 42,
+  },
+];
 
 /* Typewriter Data for Hero Section */
 const HERO_TYPEWRITER = {
@@ -528,6 +568,57 @@ export default function LandingPage() {
               </div>
             </div>
 
+          </section>
+
+          {/* ==================== EVENT PARTNERS MARQUEE SECTION ==================== */}
+          <section className="bg-[#f5f0e6]/70 border-b border-[#e2dbd0] py-8 sm:py-10 overflow-hidden relative">
+            <div className="max-w-7xl mx-auto px-6 mb-6 text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1a5c50]/10 border border-[#1a5c50]/20 text-[#1a5c50] text-[11px] font-bold uppercase tracking-widest mb-1.5 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-[#d4940a]" />
+                <span>Kolaborasi & Penyelenggara Resmi Event</span>
+              </div>
+              <h3 className="font-display font-semibold text-xl sm:text-2xl text-[#1a1917] tracking-tight">
+                Didukung oleh Dinas Pendidikan & Ekosistem Teknologi
+              </h3>
+              <p className="text-xs sm:text-[13px] text-[#6b6862] mt-1 max-w-2xl mx-auto">
+                Inisiatif inovasi kecerdasan buatan untuk akselerasi perangkat ajar Kurikulum Merdeka di Indonesia
+              </p>
+            </div>
+
+            {/* Marquee Scroller with Smooth Edge Fade */}
+            <div className="relative w-full overflow-hidden">
+              {/* Fade Overlays */}
+              <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-[#f5f0e6] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-[#f5f0e6] to-transparent z-10 pointer-events-none" />
+
+              {/* Looping Track: Duplicate 4 times for continuous 60fps infinite marquee */}
+              <div className="flex w-max items-center gap-5 sm:gap-7 animate-marquee-loop px-4">
+                {[...EVENT_PARTNERS, ...EVENT_PARTNERS, ...EVENT_PARTNERS, ...EVENT_PARTNERS].map((partner, idx) => (
+                  <div
+                    key={`${partner.name}-${idx}`}
+                    className="flex items-center gap-3.5 bg-white/95 hover:bg-white border border-[#e2dbd0] hover:border-[#2a7d6e]/50 rounded-2xl px-5 py-3 shadow-sm hover:shadow-md transition-all duration-300 group shrink-0 min-w-[210px] sm:min-w-[240px]"
+                  >
+                    <div className="relative h-11 w-28 sm:w-32 flex items-center justify-center shrink-0">
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        width={partner.width}
+                        height={partner.height}
+                        className="object-contain max-h-10 max-w-[120px] transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex flex-col border-l border-[#e2dbd0] pl-3.5">
+                      <span className="text-[12px] font-bold text-[#1a1917] group-hover:text-[#2a7d6e] transition-colors leading-tight">
+                        {partner.name}
+                      </span>
+                      <span className="text-[10px] text-[#6b6862] font-medium mt-0.5 leading-tight">
+                        {partner.role}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
           {/* ==================== 4. SOCIAL PROOF ==================== */}

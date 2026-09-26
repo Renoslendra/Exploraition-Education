@@ -248,6 +248,25 @@ html {
   animation: stepFadeSlide 0.2s ease-out forwards;
 }
 
+/* Infinite Marquee Ticker (Right to Left Looping) */
+@keyframes marqueeLoop {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-loop {
+  animation: marqueeLoop 28s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-loop:hover {
+  animation-play-state: paused;
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *,
