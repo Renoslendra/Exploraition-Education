@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import OfficialTablePreview from "@/components/modul/OfficialTablePreview";
-import { Download, FileText, Printer, CheckCircle2, ArrowLeft, Sparkles, LayoutList, PenSquare } from "lucide-react";
+import { Download, FileText, Printer, CheckCircle2, ArrowLeft, Sparkles, LayoutList, PenSquare, Cloud, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { StructuredModulAjarData } from "@/types/modul";
 
@@ -169,6 +169,7 @@ export default function EditorPage() {
   const [moduleTitle, setModuleTitle] = useState<string>("Modul Ajar");
   const [status, setStatus] = useState<"draft" | "final">("draft");
   const [isExportingWord, setIsExportingWord] = useState<boolean>(false);
+  const [isSavingCloud, setIsSavingCloud] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Ambil data dari localStorage jika ada hasil dari form /create
@@ -182,6 +183,7 @@ export default function EditorPage() {
         try {
           const parsed = JSON.parse(savedStructured);
           setStructuredData(parsed);
+          setSelectedFromHistory(true); // Langsung buka modul aktif yang baru dibuat
           
           if (savedTitle) {
             setModuleTitle(savedTitle);
@@ -195,16 +197,41 @@ export default function EditorPage() {
         setStructuredData(DEFAULT_FALLBACK_DATA);
       }
 
-      // Load module history (if any)
+      // Load module history dari localStorage
       const savedHistory = localStorage.getItem("modulin_history");
+      let localHistoryList: StructuredModulAjarData[] = [];
       if (savedHistory) {
         try {
-          const parsedHistory: StructuredModulAjarData[] = JSON.parse(savedHistory);
-          setModuleHistory(parsedHistory);
+          localHistoryList = JSON.parse(savedHistory);
+          setModuleHistory(localHistoryList);
         } catch {
           console.warn("Failed to parse module history");
         }
       }
+
+      // Sinkronisasi dengan riwayat cloud dari API
+      fetch("/api/modules")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+            const cloudModules: StructuredModulAjarData[] = data.data
+              .map((m: any) => m.structured_data)
+              .filter(Boolean);
+            
+            // Gabungkan unik berdasarkan mata pelajaran & kelas
+            const combined = [...localHistoryList];
+            for (const cm of cloudModules) {
+              const exists = combined.some(
+                (lh) =>
+                  lh?.informasiUmum?.mataPelajaran === cm?.informasiUmum?.mataPelajaran &&
+                  lh?.informasiUmum?.kelas === cm?.informasiUmum?.kelas
+              );
+              if (!exists) combined.push(cm);
+            }
+            setModuleHistory(combined);
+          }
+        })
+        .catch(() => {});
 
       if (savedHtml) {
         setContentHtml(savedHtml);
@@ -218,6 +245,41 @@ export default function EditorPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleSaveToCloud = async () => {
+    setIsSavingCloud(true);
+    try {
+      const activeId = localStorage.getItem("modulin_active_id");
+      const endpoint = activeId ? `/api/modules/${activeId}` : "/api/modules";
+      const method = activeId ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          structuredData: structuredData || DEFAULT_FALLBACK_DATA,
+          htmlContent: contentHtml,
+          status,
+          title: moduleTitle,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || "Gagal menyimpan ke cloud.");
+      }
+
+      if (resData.module?.id) {
+        localStorage.setItem("modulin_active_id", resData.module.id);
+      }
+      showToast("Modul berhasil disimpan ke cloud database.");
+    } catch (err: any) {
+      console.warn("Save cloud error:", err);
+      showToast(err?.message || "Gagal menyimpan ke cloud. Pastikan sudah login.");
+    } finally {
+      setIsSavingCloud(false);
+    }
   };
 
   const handleUpdateStructuredData = (updated: StructuredModulAjarData) => {
@@ -366,6 +428,16 @@ export default function EditorPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSaveToCloud}
+                  disabled={isSavingCloud}
+                  className="text-[12px] border border-surface-dark-soft rounded-md px-3 py-1.5 hover:bg-surface-dark-soft transition-colors bg-surface-dark-elevated text-on-dark flex items-center gap-1.5 cursor-pointer font-sans disabled:opacity-50"
+                  title="Simpan perubahan ke cloud database"
+                >
+                  {isSavingCloud ? <Loader2 size={14} className="animate-spin text-primary" /> : <Save size={14} className="text-primary" />}
+                  <span>{isSavingCloud ? "Menyimpan..." : "Simpan"}</span>
+                </button>
+
                 <button
                   onClick={() => {
                     const nextStatus = status === "draft" ? "final" : "draft";

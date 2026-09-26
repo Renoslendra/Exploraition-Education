@@ -50,6 +50,20 @@ export default function DashboardPage() {
       }
       setIsExported(savedExported);
       setIsEdited(savedEdited);
+
+      // Sinkronisasi modul dari cloud database jika tersedia
+      fetch("/api/modules")
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData?.success && Array.isArray(resData?.data) && resData.data.length > 0) {
+            const first = resData.data[0];
+            if (first?.structured_data) {
+              setActiveModule((prev) => prev || first.structured_data);
+              setModuleTitle(`Modul Ajar: ${first.mata_pelajaran} Kelas ${first.kelas}`);
+            }
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       console.error("Error reading from localStorage:", err);
     }

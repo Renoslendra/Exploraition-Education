@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, User, Check } from "lucide-react";
 
@@ -210,14 +211,10 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
     setGoogleLoading(true);
     setAuthError(null);
     try {
-      const client = getSupabaseClient();
-      const { error } = await client.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/dashboard` },
-      });
-      if (error) throw new Error("Gagal masuk dengan Google. Coba lagi.");
+      localStorage.setItem("modulin_logged_in", "true");
+      await signIn("google", { callbackUrl: "/dashboard" });
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : "Gagal masuk. Coba lagi.");
+      setAuthError(err instanceof Error ? err.message : "Gagal masuk dengan Google. Coba lagi.");
       setGoogleLoading(false);
     }
   };
@@ -410,6 +407,19 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
                     <span>Masuk dengan Google</span>
                   </>
                 )}
+              </button>
+
+              {/* Quick Demo Login Button for instant access */}
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("modulin_logged_in", "true");
+                  window.location.href = "/dashboard";
+                }}
+                className="w-full mt-3 h-10 bg-[#f0ebe0] hover:bg-[#e8e1d3] border border-[#e2dbd0] rounded-[12px] text-[13px] font-medium text-[#444340] flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer"
+                title="Bypass login langsung untuk presentasi & pengujian hackathon"
+              >
+                <span>⚡ Masuk Cepat (Mode Demo / Juri)</span>
               </button>
             </>
           )}

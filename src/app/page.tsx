@@ -486,7 +486,7 @@ export default function LandingPage() {
             {/* Full-Width Background Image */}
             <Image
               src="/hero-banner.png"
-              alt="Modulin Hero Banner — Guru Indonesia"
+              alt="Modulin Hero Banner - Guru Indonesia"
               fill
               className="object-cover object-[85%_center] md:object-center"
               priority

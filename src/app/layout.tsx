@@ -16,7 +16,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Modulin — Generator Modul Ajar AI untuk Kurikulum Merdeka",
+  title: "Modulin - Generator Modul Ajar AI untuk Kurikulum Merdeka",
   description:
     "Buat modul ajar lengkap sesuai Kurikulum Merdeka dalam hitungan menit. AI yang memahami PBL, PjBL, Discovery Learning, dan model pembelajaran lainnya.",
   keywords: [
@@ -38,6 +38,8 @@ export const metadata: Metadata = {
   },
 };
 
+import AuthProvider from "@/components/providers/AuthProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,7 +56,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Modulin" />
       </head>
       <body className={`${inter.variable} ${cormorant.variable} antialiased`}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

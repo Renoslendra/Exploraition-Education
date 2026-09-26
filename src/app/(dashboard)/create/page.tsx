@@ -598,6 +598,39 @@ function Generate({
         localStorage.setItem("modulin_exported", "false");
         localStorage.setItem("modulin_edited", "false");
 
+        // Sinkronisasi ke riwayat modul lokal
+        try {
+          const historyRaw = localStorage.getItem("modulin_history");
+          const currentHistory = historyRaw ? JSON.parse(historyRaw) : [];
+          const titleKey = `${result.structuredData?.informasiUmum?.mataPelajaran || ""}_${result.structuredData?.informasiUmum?.kelas || ""}`;
+          const filtered = currentHistory.filter(
+            (item: any) =>
+              `${item?.informasiUmum?.mataPelajaran || ""}_${item?.informasiUmum?.kelas || ""}` !== titleKey
+          );
+          const updatedHistory = [result.structuredData, ...filtered].slice(0, 30);
+          localStorage.setItem("modulin_history", JSON.stringify(updatedHistory));
+        } catch (e) {
+          console.warn("Failed to update history in localStorage:", e);
+        }
+
+        // Sinkronisasi ke Supabase jika login (non-blocking)
+        fetch("/api/modules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            structuredData: result.structuredData,
+            htmlContent: fullHtml,
+            status: "generated",
+          }),
+        })
+          .then((res) => res.json())
+          .then((saveRes) => {
+            if (saveRes?.module?.id) {
+              localStorage.setItem("modulin_active_id", saveRes.module.id);
+            }
+          })
+          .catch(() => {});
+
         onDone();
       } catch (err: any) {
         if (!active) return;

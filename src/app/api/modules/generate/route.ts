@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { getCurriculumRAGContext } from "@/lib/rag/retriever";
 import { buildTemplateAcuanAIPrompt } from "@/constants/template-acuan";
+import { getAuthUserId, getSupabaseAdminClient } from "@/lib/supabase/server";
 import type { StructuredModulAjarData, ModulSection } from "@/types/modul";
+import crypto from "crypto";
 
 function getApiKey(): string {
   return process.env.GEMINI_API_KEY?.trim() || "";
@@ -189,6 +191,15 @@ function convertToSections(data: StructuredModulAjarData): ModulSection[] {
 }
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  const authHeader = req.headers.get("authorization");
+  let userId: string | null = null;
+  try {
+    userId = await getAuthUserId(authHeader);
+  } catch {
+    // Guest or unauthenticated
+  }
+
   try {
     const body = await req.json();
     const { identitas, modelPembelajaran } = body;
@@ -315,14 +326,54 @@ Buat modul ajar lengkap berkualitas tinggi, faktual, dan kontekstual untuk kelas
     }
 
     const sections = convertToSections(structuredData);
+    const durasiMs = Date.now() - startTime;
+
+    // Catat ke ai_generation_logs jika user login (background promise, non-blocking)
+    if (userId) {
+      (async () => {
+        try {
+          const adminClient = getSupabaseAdminClient();
+          const promptHash = crypto.createHash("sha256").update(promptText).digest("hex");
+          const { error } = await adminClient.from("ai_generation_logs").insert({
+            user_id: userId,
+            tipe: "full",
+            model_name: "gemini-3.5-flash",
+            prompt_hash: promptHash,
+            durasi_ms: durasiMs,
+            status: "success",
+          });
+          if (error) console.warn("[Generate Modul] Error logging to Supabase:", error.message);
+        } catch (e) {
+          console.warn("[Generate Modul] Failed logging:", e);
+        }
+      })();
+    }
 
     return NextResponse.json({
       success: true,
       structuredData,
       sections,
+      durasiMs,
     });
   } catch (error: any) {
     console.error("API /api/modules/generate error:", error);
+    const durasiMs = Date.now() - startTime;
+    if (userId) {
+      (async () => {
+        try {
+          const adminClient = getSupabaseAdminClient();
+          await adminClient.from("ai_generation_logs").insert({
+            user_id: userId,
+            tipe: "full",
+            model_name: "gemini-3.5-flash",
+            durasi_ms: durasiMs,
+            status: "error",
+            error_message: error?.message || "Unknown error",
+          });
+        } catch {}
+      })();
+    }
+
     return NextResponse.json(
       { success: false, error: error?.message || "Internal server error" },
       { status: 500 }
