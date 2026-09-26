@@ -436,12 +436,12 @@ export default function LandingPage() {
                 Tentang
                 <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
               </Link>
-              <Link href="/editor" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
-                Template
-                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
-              </Link>
               <Link href="/fitur" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
                 Fitur
+                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
+              </Link>
+              <Link href="/editor" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+                Template
                 <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
               </Link>
             </nav>
@@ -471,8 +471,8 @@ export default function LandingPage() {
             <div className="absolute top-full left-0 w-full bg-[#1a5c50] shadow-xl md:hidden border-t border-white/10 flex flex-col py-4 px-6 gap-4">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-white text-[16px] font-bold py-2 border-b border-white/10">Beranda</Link>
               <Link href="/tentang" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Tentang</Link>
-              <Link href="/editor" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Template</Link>
               <Link href="/fitur" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Fitur</Link>
+              <Link href="/editor" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Template</Link>
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full mt-2 flex items-center justify-center">
                 Masuk
               </Link>
@@ -899,11 +899,11 @@ export default function LandingPage() {
                       setActiveStep(0);
                     }}
                     className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeStep === 0
-                        ? "bg-[#2a7d6e] text-white shadow-sm"
+                        ? "bg-[#2a7d6e] text-white shadow-sm font-bold"
                         : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
                       }`}
                   >
-                    <span>01. Isi Identitas Modul</span>
+                    <span>01. Pilih Model Pembelajaran</span>
                   </button>
 
                   {/* Connector Line 1 */}
@@ -919,11 +919,11 @@ export default function LandingPage() {
                       setActiveStep(1);
                     }}
                     className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeStep === 1
-                        ? "bg-[#2a7d6e] text-white shadow-sm"
+                        ? "bg-[#2a7d6e] text-white shadow-sm font-bold"
                         : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
                       }`}
                   >
-                    <span>02. Pilih Model Pembelajaran</span>
+                    <span>02. Isi Identitas Modul</span>
                   </button>
 
                   {/* Connector Line 2 */}
@@ -939,7 +939,7 @@ export default function LandingPage() {
                       setActiveStep(2);
                     }}
                     className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeStep === 2
-                        ? "bg-[#2a7d6e] text-white shadow-sm"
+                        ? "bg-[#2a7d6e] text-white shadow-sm font-bold"
                         : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
                       }`}
                   >
@@ -950,11 +950,55 @@ export default function LandingPage() {
 
               {/* Panel Konten Berubah Sesuai Langkah Aktif */}
               <div className="max-w-3xl mx-auto min-h-[320px]">
-                {/* Langkah 1: Isi Identitas Modul Mockup */}
+                {/* Langkah 1: Pilih Model Pembelajaran */}
                 {activeStep === 0 && (
                   <div className="animate-step-enter bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 md:p-8 shadow-sm">
                     <h4 className="font-display font-semibold text-xl text-[#1a1917] mb-2">
-                      Langkah 1: Identitas dan Topik Pembelajaran
+                      Langkah 1: Pilih Pendekatan Pedagogik
+                    </h4>
+                    <p className="text-xs text-[#6b6862] mb-6">
+                      Sintaks kegiatan belajar langsung disesuaikan dengan
+                      karakteristik model terpilih.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {MODELS_DATA.map((model) => {
+                        const isSelected = selectedModelId === model.id;
+                        return (
+                          <button
+                            key={model.id}
+                            onClick={() => setSelectedModelId(model.id)}
+                            className={`p-3.5 rounded-lg text-left transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-[#e6f3f0] border-2 border-[#2a7d6e] shadow-sm"
+                                : "bg-white border border-[#e2dbd0] hover:border-[#2a7d6e]/50 hover:bg-[#faf8f4]"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="font-semibold text-xs text-[#1a1917]">
+                                {model.id.toUpperCase()}
+                              </span>
+                              {isSelected && (
+                                <span className="text-[10px] bg-[#2a7d6e] text-white px-1.5 py-0.5 rounded font-medium">
+                                  Dipilih
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-[#444340] line-clamp-1 font-medium">
+                              {model.name}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Langkah 2: Isi Identitas Modul Mockup */}
+                {activeStep === 1 && (
+                  <div className="animate-step-enter bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 md:p-8 shadow-sm">
+                    <h4 className="font-display font-semibold text-xl text-[#1a1917] mb-2">
+                      Langkah 2: Identitas dan Topik Pembelajaran
                     </h4>
                     <p className="text-xs text-[#6b6862] mb-6">
                       Sistem menentukan fase dan target capaian secara otomatis
@@ -1005,82 +1049,6 @@ export default function LandingPage() {
                           value="3 Pertemuan (6 JP @ 40 Menit)"
                           className="w-full bg-white border border-[#e2dbd0] rounded-md px-3.5 py-2 text-xs sm:text-sm text-[#1a1917] font-normal cursor-default"
                         />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Langkah 2: Pilih Model Pembelajaran (Grid 2x3 mini) */}
-                {activeStep === 1 && (
-                  <div className="animate-step-enter bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 md:p-8 shadow-sm">
-                    <h4 className="font-display font-semibold text-xl text-[#1a1917] mb-2">
-                      Langkah 2: Pilih Pendekatan Pedagogik
-                    </h4>
-                    <p className="text-xs text-[#6b6862] mb-6">
-                      Sintaks kegiatan belajar langsung disesuaikan dengan
-                      karakteristik model terpilih.
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                      {/* PBL: Selected State */}
-                      <div className="bg-[#e6f3f0] border-2 border-[#2a7d6e] rounded-lg p-3.5 relative">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-semibold text-xs text-[#1a1917]">
-                            PBL
-                          </span>
-                          <span className="text-[10px] bg-[#2a7d6e] text-white px-1.5 py-0.5 rounded font-medium">
-                            Dipilih
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-[#444340]">
-                          Problem-Based Learning
-                        </p>
-                      </div>
-
-                      {/* Other models in clean mini card */}
-                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
-                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
-                          PjBL
-                        </span>
-                        <p className="text-[11px] text-[#6b6862]">
-                          Project-Based Learning
-                        </p>
-                      </div>
-
-                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
-                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
-                          Discovery
-                        </span>
-                        <p className="text-[11px] text-[#6b6862]">
-                          Discovery Learning
-                        </p>
-                      </div>
-
-                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
-                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
-                          Inquiry
-                        </span>
-                        <p className="text-[11px] text-[#6b6862]">
-                          Inquiry Terbimbing
-                        </p>
-                      </div>
-
-                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
-                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
-                          Diferensiasi
-                        </span>
-                        <p className="text-[11px] text-[#6b6862]">
-                          Pembelajaran Berdiferensiasi
-                        </p>
-                      </div>
-
-                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
-                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
-                          Cooperative
-                        </span>
-                        <p className="text-[11px] text-[#6b6862]">
-                          Cooperative Learning
-                        </p>
                       </div>
                     </div>
                   </div>
