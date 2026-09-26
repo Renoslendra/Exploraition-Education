@@ -13,6 +13,7 @@ import {
   Zap,
   Menu,
   X,
+  GraduationCap,
 } from "lucide-react";
 
 const features = [
