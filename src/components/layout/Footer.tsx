@@ -9,7 +9,7 @@ export default function Footer() {
             Modulin
           </span>
           <p className="text-[13px] text-on-dark-soft">
-            Generator Modul Ajar AI untuk Kurikulum Merdeka.
+            Penyusun Modul Ajar Resmi Kurikulum Merdeka.
           </p>
         </div>
         

@@ -7,38 +7,38 @@ const MODELS = [
   {
     id: "pbl",
     name: "Problem-Based Learning (PBL)",
-    focus: "Berhenti di solusi/ide",
-    desc: "Pembelajaran dimulai dari masalah nyata; peserta didik merumuskan solusi tanpa harus membuat produk fisik.",
+    focus: "Pemecahan Masalah",
+    desc: "Peserta didik menganalisis dan merumuskan solusi atas masalah nyata.",
   },
   {
     id: "pjbl",
     name: "Project-Based Learning (PjBL)",
-    focus: "Menghasilkan produk nyata",
-    desc: "Peserta didik merancang, membuat, dan mempresentasikan produk nyata (artefak, prototipe).",
+    focus: "Produk Nyata",
+    desc: "Peserta didik merancang dan menghasilkan produk atau artefak nyata.",
   },
   {
     id: "discovery",
     name: "Discovery Learning",
-    focus: "Penemuan terbimbing",
-    desc: "Guru membimbing peserta didik menemukan konsep melalui eksplorasi terarah.",
+    focus: "Penemuan Terbimbing",
+    desc: "Peserta didik menemukan konsep melalui eksplorasi dan pembuktian mandiri.",
   },
   {
     id: "inquiry",
     name: "Inquiry Learning",
-    focus: "Investigasi",
-    desc: "Peserta didik merumuskan pertanyaan, merancang investigasi, dan menyimpulkan.",
+    focus: "Investigasi Ilmiah",
+    desc: "Peserta didik merumuskan hipotesis, mengumpulkan data, dan menarik simpulan.",
   },
   {
     id: "cooperative",
     name: "Cooperative Learning",
-    focus: "Kerja kelompok",
-    desc: "Pembelajaran dalam kelompok kecil dengan peran dan tanggung jawab individual.",
+    focus: "Kerja Kelompok",
+    desc: "Kerja kelompok terstruktur dengan tanggung jawab peran individu.",
   },
   {
     id: "circ",
     name: "CIRC",
-    focus: "Literasi",
-    desc: "Kooperatif berbasis membaca-menulis; umum untuk mata pelajaran bahasa.",
+    focus: "Literasi Terpadu",
+    desc: "Pembelajaran kooperatif terpadu untuk membaca, menulis, dan membedah wacana.",
   },
 ];
 
@@ -56,6 +56,7 @@ export default function CreateModulePage() {
   const [kelas, setKelas] = useState("1");
   const [bab, setBab] = useState("");
   const [tahunAjaran, setTahunAjaran] = useState("2026/2027");
+  const [alokasiWaktu, setAlokasiWaktu] = useState("2 x 45 menit (1 Pertemuan)");
 
   // State: Auto-fill Fase & Label
   const [fase, setFase] = useState("Fase A");
@@ -82,19 +83,73 @@ export default function CreateModulePage() {
     }
   }, [jenjang, kelas]);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string>("Menghubungkan layanan modul...");
+
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedModel) {
-      alert("Silakan pilih Model Pembelajaran terlebih dahulu!");
+      alert("Pilih model pembelajaran terlebih dahulu.");
       return;
     }
     
-    // Simulasi progress AI loading
+    setErrorMsg(null);
     setIsGenerating(true);
-    setTimeout(() => {
-      // Pindah ke halaman editor setelah "selesai"
+    setLoadingStep("Menyelaraskan Capaian Pembelajaran resmi...");
+
+    try {
+      const stepTimer1 = setTimeout(() => {
+        setLoadingStep("Menyusun 10 komponen perangkat ajar...");
+      }, 2500);
+
+      const stepTimer2 = setTimeout(() => {
+        setLoadingStep("Menyusun rubrik asesmen dan langkah pembelajaran...");
+      }, 5500);
+
+      const res = await fetch("/api/modules/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identitas: {
+            namaGuru,
+            instansi: sekolah,
+            mataPelajaran: mapel,
+            jenjang,
+            kelas,
+            fase: fase.replace("Fase ", ""),
+            tahunAjaran,
+            bab,
+            alokasiWaktu,
+          },
+          modelPembelajaran: MODELS.find((m) => m.id === selectedModel),
+        }),
+      });
+
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+
+      const result = await res.json();
+
+      if (!result.success || !result.structuredData) {
+        throw new Error(result.error || "Gagal menyusun modul ajar.");
+      }
+
+      // Simpan structured data dan html ke localStorage untuk dimuat di /editor
+      localStorage.setItem("modulin_active_structured", JSON.stringify(result.structuredData));
+      
+      const fullHtml = (result.sections || [])
+        .map((s: any) => `<h2>${s.judul}</h2>${s.konten}<br/>`)
+        .join("\n<hr/>\n");
+
+      localStorage.setItem("modulin_active_html", fullHtml);
+      localStorage.setItem("modulin_active_title", `Modul Ajar ${mapel} Kelas ${kelas}`);
+
       router.push("/editor");
-    }, 3000);
+    } catch (err: any) {
+      console.error("Generate error:", err);
+      setIsGenerating(false);
+      setErrorMsg(err?.message || "Layanan pembuatan modul sedang tidak dapat diakses.");
+    }
   };
 
   if (isGenerating) {
@@ -103,17 +158,19 @@ export default function CreateModulePage() {
         <div className="bg-surface-card rounded-xl p-12 border border-hairline w-full max-w-xl shadow-sm">
           <div className="flex justify-center mb-6">
             <div className="flex gap-2">
-              <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-100"></div>
-              <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-200"></div>
-              <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-300"></div>
+              <div className="w-3.5 h-3.5 bg-primary rounded-full animate-bounce delay-100"></div>
+              <div className="w-3.5 h-3.5 bg-primary rounded-full animate-bounce delay-200"></div>
+              <div className="w-3.5 h-3.5 bg-primary rounded-full animate-bounce delay-300"></div>
             </div>
           </div>
-          <h2 className="font-display text-[28px] font-semibold text-ink mb-2">
-            AI sedang meriset materi...
+          <h2 className="font-display text-[26px] font-semibold text-ink mb-2">
+            Menyusun Modul Ajar
           </h2>
-          <p className="text-muted text-[15px]">
-            Menyusun modul {mapel} untuk {fase} berdasarkan model {selectedModel.toUpperCase()}.<br/>
-            Proses ini memakan waktu beberapa detik.
+          <p className="text-primary font-medium text-[15px] mb-2">
+            {loadingStep}
+          </p>
+          <p className="text-muted text-[13px]">
+            {mapel || "Mata Pelajaran"} • {fase} • Model {selectedModel.toUpperCase()}
           </p>
         </div>
       </div>
@@ -121,19 +178,19 @@ export default function CreateModulePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto w-full px-4 py-[64px]">
-      <h1 className="font-display text-[48px] font-semibold text-ink mb-2 tracking-[-1px]">
+    <div className="max-w-5xl mx-auto w-full px-4 py-[56px]">
+      <h1 className="font-display text-[40px] font-semibold text-ink mb-2 tracking-[-0.8px]">
         Buat Modul Ajar
       </h1>
-      <p className="text-muted text-[15px] mb-12">
-        Pilih model pembelajaran dan lengkapi identitas untuk memulai riset AI.
+      <p className="text-muted text-[15px] mb-10">
+        Pilih model pembelajaran dan lengkapi identitas perangkat ajar.
       </p>
       
-      <form onSubmit={handleGenerate} className="space-y-[64px]">
+      <form onSubmit={handleGenerate} className="space-y-[48px]">
         
         {/* SECTION 1: Model Pembelajaran */}
         <section>
-          <h2 className="text-[20px] font-medium text-ink mb-6">1. Pilih Model Pembelajaran</h2>
+          <h2 className="text-[18px] font-semibold text-ink mb-5">1. Model Pembelajaran</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="radiogroup" aria-label="Model Pembelajaran">
             {MODELS.map((m) => {
               const isSelected = selectedModel === m.id;
@@ -175,7 +232,7 @@ export default function CreateModulePage() {
         {/* SECTION 2: Form Identitas */}
         <section className="flex justify-center">
           <div className="w-full max-w-[640px]">
-            <h2 className="text-[20px] font-medium text-ink mb-6">2. Identitas Modul</h2>
+            <h2 className="text-[18px] font-semibold text-ink mb-5">2. Identitas Perangkat Ajar</h2>
             
             <div className="bg-surface-card rounded-[16px] p-8 border border-hairline space-y-6 shadow-sm">
               
@@ -188,7 +245,7 @@ export default function CreateModulePage() {
                     required
                     value={namaGuru}
                     onChange={(e) => setNamaGuru(e.target.value)}
-                    placeholder="Masukkan nama lengkap"
+                    placeholder="Contoh: Ahmad Faozan, S.Pd"
                     className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] h-[40px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink transition-shadow"
                   />
                 </div>
@@ -200,7 +257,7 @@ export default function CreateModulePage() {
                     required
                     value={sekolah}
                     onChange={(e) => setSekolah(e.target.value)}
-                    placeholder="Masukkan nama sekolah"
+                    placeholder="Contoh: SMK Mabdaul Falah"
                     className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] h-[40px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink transition-shadow"
                   />
                 </div>
@@ -214,7 +271,7 @@ export default function CreateModulePage() {
                   required
                   value={mapel}
                   onChange={(e) => setMapel(e.target.value)}
-                  placeholder="Ketik mata pelajaran..."
+                  placeholder="Contoh: Bahasa Inggris"
                   className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] h-[40px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink transition-shadow"
                 />
               </div>
@@ -262,38 +319,58 @@ export default function CreateModulePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="bab" className="block text-[14px] font-medium text-body-strong mb-2">Bab / Topik Materi</label>
+                  <label htmlFor="bab" className="block text-[14px] font-medium text-body-strong mb-2">Materi Pokok / Bab</label>
                   <textarea 
                     id="bab"
                     required
                     value={bab}
                     onChange={(e) => setBab(e.target.value)}
-                    placeholder="Sebutkan topik spesifik..."
+                    placeholder="Contoh: Teks Deskriptif tentang Tokoh Inspiratif Dunia"
                     className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink min-h-[120px] resize-y transition-shadow"
                   />
                 </div>
-                <div>
-                  <label htmlFor="tahunAjaran" className="block text-[14px] font-medium text-body-strong mb-2">Tahun Ajaran</label>
-                  <select 
-                    id="tahunAjaran"
-                    value={tahunAjaran}
-                    onChange={(e) => setTahunAjaran(e.target.value)}
-                    className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] h-[40px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink cursor-pointer"
-                  >
-                    <option value="2025/2026">2025/2026</option>
-                    <option value="2026/2027">2026/2027</option>
-                    <option value="2027/2028">2027/2028</option>
-                  </select>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="tahunAjaran" className="block text-[14px] font-medium text-body-strong mb-2">Tahun Ajaran</label>
+                    <select 
+                      id="tahunAjaran"
+                      value={tahunAjaran}
+                      onChange={(e) => setTahunAjaran(e.target.value)}
+                      className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] h-[40px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink cursor-pointer"
+                    >
+                      <option value="2025/2026">2025/2026</option>
+                      <option value="2026/2027">2026/2027</option>
+                      <option value="2027/2028">2027/2028</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="alokasiWaktu" className="block text-[14px] font-medium text-body-strong mb-2">Alokasi Waktu</label>
+                    <input 
+                      id="alokasiWaktu"
+                      type="text"
+                      value={alokasiWaktu}
+                      onChange={(e) => setAlokasiWaktu(e.target.value)}
+                      placeholder="Contoh: 2 x 45 menit (1 Pertemuan)"
+                      className="w-full bg-canvas border border-hairline rounded-md px-[14px] py-[10px] h-[40px] text-[15px] focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-ink transition-shadow"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
             
+            {errorMsg && (
+              <div className="mt-4 p-4 rounded-md bg-red-50 border-l-4 border-error text-error text-[14px]">
+                <p className="font-semibold">Gagal Menyusun Modul</p>
+                <p>{errorMsg}</p>
+              </div>
+            )}
+            
             <div className="mt-8 flex justify-end">
               <button 
                 type="submit" 
-                className="bg-primary text-on-primary font-medium text-[14px] px-5 py-2.5 h-[40px] rounded-md hover:bg-primary-active transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary flex items-center justify-center gap-2"
+                className="bg-primary text-on-primary font-medium text-[14px] px-7 py-2.5 h-[44px] rounded-md hover:bg-primary-active transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary flex items-center justify-center gap-2 cursor-pointer font-sans"
               >
-                Generate Modul
+                Buat Modul Ajar
               </button>
             </div>
           </div>

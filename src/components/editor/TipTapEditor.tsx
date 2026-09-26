@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import {
@@ -48,16 +49,35 @@ const ToolbarButton = ({
   );
 };
 
-export default function TipTapEditor({ initialContent }: { initialContent: string }) {
+export default function TipTapEditor({ 
+  initialContent,
+  onChange 
+}: { 
+  initialContent: string;
+  onChange?: (html: string) => void;
+}) {
   const editor = useEditor({
     extensions: [
       StarterKit,
     ],
     content: initialContent,
-  })
+    onUpdate: ({ editor }) => {
+      if (onChange) {
+        onChange(editor.getHTML());
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (editor && initialContent && !editor.isDestroyed) {
+      if (editor.getHTML() !== initialContent) {
+        editor.commands.setContent(initialContent);
+      }
+    }
+  }, [initialContent, editor]);
 
   if (!editor) {
-    return null
+    return null;
   }
 
   return (

@@ -96,7 +96,7 @@ export default function LandingPage() {
             <div className="flex justify-center md:justify-start mb-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-soft border border-hairline text-body text-xs font-medium tracking-wide">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                <span>Kurikulum Merdeka • Sesuai Standar BSKAP No. 032</span>
+                <span>Kurikulum Merdeka • Standar BSKAP No. 032/H/KR/2024</span>
               </div>
             </div>
 
@@ -104,34 +104,34 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               <div className="lg:col-span-7 text-center md:text-left">
                 <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-ink leading-[1.08] mb-6">
-                  Buat Modul Ajar dalam Menit, <span className="italic font-normal text-primary">Bukan Jam.</span>
+                  Susun Modul Ajar Resmi <span className="italic font-normal text-primary">dalam Hitungan Menit.</span>
                 </h1>
                 <p className="text-base sm:text-lg text-body leading-relaxed mb-8 max-w-xl">
-                  Bantu guru merancang pembelajaran berdiferensiasi, sintaks model belajar interaktif, hingga rubrik asesmen lengkap tanpa beban administratif yang melelahkan.
+                  Pilih model pembelajaran dan materi pokok. Dapatkan perangkat ajar lengkap dengan sintaks kegiatan, diferensiasi proses, dan rubrik asesmen siap cetak.
                 </p>
 
                 {/* CTA Actions */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
                   <Link
                     href="/create"
-                    className="w-full sm:w-auto bg-primary text-on-primary text-sm font-medium px-6 py-3 rounded-md hover:bg-primary-active transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                    className="w-full sm:w-auto bg-primary text-on-primary text-sm font-medium px-6 py-3 rounded-md hover:bg-primary-active transition-all duration-200 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                   >
                     <Sparkles className="w-5 h-5" />
-                    <span>Mulai Buat Modul Gratis</span>
+                    <span>Buat Modul Ajar</span>
                   </Link>
                   <Link
-                    href="#sample-doc"
-                    className="w-full sm:w-auto border border-hairline bg-surface-card text-ink text-sm font-medium px-6 py-3 rounded-md hover:bg-surface-soft transition-all duration-200 flex items-center justify-center gap-2"
+                    href="/editor"
+                    className="w-full sm:w-auto border border-hairline bg-surface-card text-ink text-sm font-medium px-6 py-3 rounded-md hover:bg-surface-soft transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <FileText className="w-5 h-5 text-muted" />
-                    <span>Lihat Contoh Dokumen (PDF)</span>
+                    <span>Lihat Contoh Format Resmi</span>
                   </Link>
                 </div>
 
                 {/* Mini Endorsement Note */}
                 <div className="mt-8 pt-6 border-t border-hairline flex items-center gap-3 justify-center md:justify-start text-xs text-muted">
                   <BadgeCheck className="w-5 h-5 text-primary" />
-                  <span>100% Menyesuaikan Capaian Pembelajaran (CP) Resmi Kemendikbudristek</span>
+                  <span>Menyelaraskan Capaian Pembelajaran resmi Kemendikbudristek</span>
                 </div>
               </div>
 
@@ -212,12 +212,12 @@ export default function LandingPage() {
             {/* Teacher Quote Banner */}
             <div className="mt-8 pt-8 border-t border-hairline-soft max-w-3xl mx-auto text-center">
               <p className="font-display text-lg sm:text-xl italic text-ink font-normal leading-relaxed">
-                "Modulin bukan sekadar generator teks acak. Sintaks pembelajarannya benar-benar sesuai kaidah pedagogi Kurikulum Merdeka. Saya bisa menyusun diferensiasi gaya belajar murid tanpa lembur."
+                "Sintaks pembelajarannya runut dan rubrik asesmennya langsung terpetakan ke tujuan pembelajaran. Format tabelnya rapi sesuai standar supervisi sekolah."
               </p>
               <div className="mt-3 flex items-center justify-center gap-2">
                 <span className="text-xs font-semibold text-ink">Dewi Ratnasari, S.Pd.</span>
                 <span className="text-muted text-xs">•</span>
-                <span className="text-xs text-muted">Guru Penggerak Angkatan 7, Bandung</span>
+                <span className="text-xs text-muted">Guru Penggerak, Bandung</span>
               </div>
             </div>
           </div>
@@ -227,12 +227,12 @@ export default function LandingPage() {
         <section id="fitur" className="py-20 md:py-28 bg-canvas">
           <div className="max-w-5xl mx-auto px-6">
             <div className="max-w-2xl mx-auto text-center mb-16">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Keunggulan Berkelanjutan</span>
+              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Standar Resmi</span>
               <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-ink mt-2 mb-4">
-                Standar Dokumen Formal, Ditenagai Nalar Pedagogik.
+                Format Kedinasan dengan Struktur Baku.
               </h2>
               <p className="text-base text-body leading-relaxed">
-                Didesain khusus untuk struktur administrasi sekolah di Indonesia. Menghilangkan friksi teknis agar guru fokus pada interaksi murid.
+                Disusun sesuai pedoman supervisi pengawas dan kepala sekolah, lengkap dengan rubrik penilaian dan lembar pengesahan.
               </p>
             </div>
 
@@ -243,13 +243,13 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-lg bg-surface-soft border border-hairline-soft flex items-center justify-center text-primary mb-6">
                     <BookOpen className="w-6 h-6" />
                   </div>
-                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">Otomatisasi CP & ATP</h3>
+                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">Penyelarasan CP &amp; TP</h3>
                   <p className="text-sm text-body leading-relaxed">
-                    Penjabaran Capaian Pembelajaran resmi ke Tujuan Pembelajaran (TP) dan Alur Tujuan Pembelajaran (ATP) yang selaras dengan fase murid tanpa perlu menyalin manual dari draf PDF 300 halaman.
+                    Penjabaran Capaian Pembelajaran resmi ke Tujuan Pembelajaran (TP) berdasarkan fase dan kelas peserta didik.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-primary font-medium">
-                  <span>Sesuai Keputusan BSKAP</span>
+                  <span>Pedoman BSKAP</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
@@ -262,11 +262,11 @@ export default function LandingPage() {
                   </div>
                   <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">6 Model Pembelajaran</h3>
                   <p className="text-sm text-body leading-relaxed">
-                    Pilih antara Problem-Based Learning (PBL), Project-Based Learning (PjBL), Discovery, Inquiry, Diferensiasi, hingga Kooperatif dengan sintaks langkah per langkah yang terstruktur rapi.
+                    Pilihan model PBL, PjBL, Discovery, Inquiry, Cooperative, hingga CIRC dengan sintaks kegiatan per tahap.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-primary font-medium">
-                  <span>Eksplorasi Sintaks Belajar</span>
+                  <span>Sintaks Terstruktur</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
@@ -277,13 +277,13 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-lg bg-surface-soft border border-hairline-soft flex items-center justify-center text-primary mb-6">
                     <Printer className="w-6 h-6" />
                   </div>
-                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">Ekspor Siap Cetak</h3>
+                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">Ekspor Word (.docx)</h3>
                   <p className="text-sm text-body leading-relaxed">
-                    Unduh instan dalam format Microsoft Word (.docx) atau PDF rapi. Sudah lengkap dengan Lembar Kerja Peserta Didik (LKPD), rubrik asesmen autentik, dan panduan refleksi guru.
+                    Unduh dokumen dalam format Word (.docx) dan PDF dengan margin dinas resmi (3-2.5-2.5-2.5 cm) dan lembar pengesahan.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-primary font-medium">
-                  <span>Standar Supervisi Pengawas</span>
+                  <span>Siap Tanda Tangan</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
@@ -297,10 +297,10 @@ export default function LandingPage() {
             <div className="max-w-2xl mx-auto text-center mb-16">
               <span className="text-xs uppercase tracking-widest text-primary font-semibold">Lingkungan Kerja Guru</span>
               <h2 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight text-on-dark mt-2 mb-4">
-                Editor Interaktif yang Dirancang Khusus untuk Guru.
+                Editor Terstruktur Modul Ajar
               </h2>
               <p className="text-base text-on-dark-soft leading-relaxed">
-                Susun section demi section secara modular, revisi instruksi dengan asisten pedagogis cerdas, dan pertahankan kendali penuh atas setiap baris modul ajar Anda.
+                Sesuaikan urutan kegiatan, lengkapi instruksi diferensiasi, dan sunting isi dokumen sebelum mengunduh berkas.
               </p>
             </div>
 
@@ -448,12 +448,12 @@ export default function LandingPage() {
         <section className="py-20 md:py-28 bg-surface-soft border-b border-hairline">
           <div className="max-w-5xl mx-auto px-6">
             <div className="text-center max-w-xl mx-auto mb-16">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Alur Kerja Guru</span>
+              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Alur Kerja</span>
               <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-ink mt-2 mb-3">
-                Tiga Langkah dari Topik Menjadi Dokumen Sah.
+                Tiga Langkah Pembuatan Modul
               </h2>
               <p className="text-sm sm:text-base text-body">
-                Dirancang agar guru tetap memegang kendali pedagogis tanpa tersita waktu pengetikan dokumen berulang.
+                Tahapan terarah dari penentuan materi hingga dokumen siap cetak.
               </p>
             </div>
             
@@ -461,27 +461,27 @@ export default function LandingPage() {
               {/* Step 1 */}
               <div className="bg-surface-card p-6 rounded-xl border border-hairline relative">
                 <span className="font-display text-4xl font-semibold text-primary-disabled/50 block mb-2">01</span>
-                <h3 className="font-display text-xl font-semibold text-ink mb-2">Masukkan Topik & Fase</h3>
+                <h3 className="font-display text-xl font-semibold text-ink mb-2">Identitas &amp; Topik</h3>
                 <p className="text-xs sm:text-sm text-body leading-relaxed">
-                  Cukup tentukan mata pelajaran, fase kurikulum (Fondasi s/d Fase F), dan alokasi jam tatap muka. Modulin menyelaraskan CP secara otomatis.
+                  Pilih mata pelajaran, kelas, dan topik materi. Sistem menentukan fase kurikulum yang sesuai.
                 </p>
               </div>
               
               {/* Step 2 */}
               <div className="bg-surface-card p-6 rounded-xl border border-hairline relative">
                 <span className="font-display text-4xl font-semibold text-primary-disabled/50 block mb-2">02</span>
-                <h3 className="font-display text-xl font-semibold text-ink mb-2">Pilih Model Pembelajaran</h3>
+                <h3 className="font-display text-xl font-semibold text-ink mb-2">Model Pembelajaran</h3>
                 <p className="text-xs sm:text-sm text-body leading-relaxed">
-                  Tentukan pendekatan mengajar (PBL, Discovery, PjBL, dll.). Sintaks interaksi murid langsung dijabarkan ke kegiatan pendahuluan, inti, dan penutup.
+                  Pilih model pembelajaran sesuai karakteristik materi dan target capaian siswa.
                 </p>
               </div>
               
               {/* Step 3 */}
               <div className="bg-surface-card p-6 rounded-xl border border-hairline relative">
                 <span className="font-display text-4xl font-semibold text-primary-disabled/50 block mb-2">03</span>
-                <h3 className="font-display text-xl font-semibold text-ink mb-2">Unduh & Sesuaikan</h3>
+                <h3 className="font-display text-xl font-semibold text-ink mb-2">Pratinjau &amp; Unduh</h3>
                 <p className="text-xs sm:text-sm text-body leading-relaxed">
-                  Tinjau dokumen di editor, tambahkan catatan khas sekolah Anda, dan unduh berkas .docx siap cetak untuk pengesahan kepala sekolah dan pengawas.
+                  Periksa format tabel resmi, lengkapi lembar pengesahan, lalu unduh berkas Word (.docx).
                 </p>
               </div>
             </div>
@@ -494,10 +494,10 @@ export default function LandingPage() {
             <div className="max-w-2xl mx-auto text-center mb-16">
               <span className="text-xs uppercase tracking-widest text-primary font-semibold">Fondasi Didaktik</span>
               <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-ink mt-2 mb-4">
-                Dirancang Berlandaskan Kerangka Teori Pendidikan.
+                Pilihan Model Pembelajaran Resmi
               </h2>
               <p className="text-base text-body leading-relaxed">
-                Bukan sekadar kata-kata manis. Setiap rencana pertemuan dibangun di atas model pembelajaran yang diakui secara akademis.
+                Setiap modul menyajikan sintaks pembelajaran bertahap sesuai panduan Kurikulum Merdeka.
               </p>
             </div>
             
@@ -506,7 +506,7 @@ export default function LandingPage() {
                 <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 01</span>
                 <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Problem-Based Learning</h4>
                 <p className="text-xs text-body leading-relaxed">
-                  Sintaks 5 tahap untuk memicu nalar kritis siswa terhadap masalah nyata lingkungan sekitar.
+                  Lima tahap kegiatan untuk melatih nalar kritis peserta didik memecahkan masalah kontekstual.
                 </p>
               </div>
               
@@ -514,7 +514,7 @@ export default function LandingPage() {
                 <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 02</span>
                 <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Project-Based Learning</h4>
                 <p className="text-xs text-body leading-relaxed">
-                  Rancang produk kontekstual bersama siswa dari perencanaan, pembuatan prototipe, hingga gelar karya.
+                  Penyusunan proyek nyata dari perencanaan, pembuatan prototipe, hingga pameran karya.
                 </p>
               </div>
               
@@ -522,7 +522,7 @@ export default function LandingPage() {
                 <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 03</span>
                 <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Discovery Learning</h4>
                 <p className="text-xs text-body leading-relaxed">
-                  Stimulasi keingintahuan siswa untuk menemukan konsep ilmiah melalui observasi mandiri terpandu.
+                  Eksplorasi terarah bagi peserta didik untuk membuktikan konsep secara langsung.
                 </p>
               </div>
               
@@ -530,7 +530,7 @@ export default function LandingPage() {
                 <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 04</span>
                 <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Inquiry Terbimbing</h4>
                 <p className="text-xs text-body leading-relaxed">
-                  Latihan merumuskan hipotesis, pengumpulan data empiris, hingga penarikan kesimpulan ilmiah.
+                  Investigasi terpandu dari perumusan hipotesis, pengumpulan data, hingga penarikan simpulan.
                 </p>
               </div>
               
@@ -538,15 +538,15 @@ export default function LandingPage() {
                 <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 05</span>
                 <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Pembelajaran Berdiferensiasi</h4>
                 <p className="text-xs text-body leading-relaxed">
-                  Pemetaan terstruktur untuk aspek diferensiasi konten, proses, serta produk akhir belajar siswa.
+                  Penyesuaian kegiatan belajar berdasarkan kesiapan, minat, dan profil belajar peserta didik.
                 </p>
               </div>
               
               <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
                 <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 06</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Kooperatif (Jigsaw/STAD)</h4>
+                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Cooperative Learning</h4>
                 <p className="text-xs text-body leading-relaxed">
-                  Optimalkan kerja sama kelompok heterogen dengan pembagian peran tanggung jawab yang adil.
+                  Kerja kelompok terstruktur dengan pembagian peran dan tanggung jawab individu.
                 </p>
               </div>
             </div>
@@ -556,30 +556,24 @@ export default function LandingPage() {
         {/* ==================== CALL TO ACTION PENUTUP ==================== */}
         <section id="harga" className="py-20 md:py-24 bg-surface-card border-t border-hairline">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <span className="text-xs uppercase tracking-widest text-primary font-semibold">Dukungan bagi Pendidik Nusantara</span>
+            <span className="text-xs uppercase tracking-widest text-primary font-semibold">Perangkat Pembelajaran</span>
             <h2 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight text-ink mt-3 mb-6">
-              Kembalikan Energi Anda untuk Mengajar di Ruang Kelas.
+              Siapkan Modul Ajar Resmi Hari Ini
             </h2>
             <p className="text-base text-body max-w-2xl mx-auto leading-relaxed mb-8">
-              Jangan habiskan malam dan akhir pekan Anda untuk menyalin dokumen format berulang. Bergabunglah dengan ribuan guru di seluruh Indonesia yang telah menyusun modul ajar berkualitas bersama Modulin.
+              Susun perangkat ajar berstandar Kurikulum Merdeka dengan format resmi yang siap digunakan.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/create"
-                className="w-full sm:w-auto bg-primary text-on-primary text-base font-medium px-8 py-3.5 rounded-md hover:bg-primary-active transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full sm:w-auto bg-primary text-on-primary text-base font-medium px-8 py-3.5 rounded-md hover:bg-primary-active transition-all duration-200 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
-                <span>Daftar Akun Guru — Gratis</span>
+                <span>Mulai Buat Modul Ajar</span>
                 <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="#"
-                className="w-full sm:w-auto border border-hairline bg-canvas text-ink text-base font-medium px-8 py-3.5 rounded-md hover:bg-surface-soft transition-all duration-200"
-              >
-                Hubungi Konsultasi Sekolah
               </Link>
             </div>
             <p className="text-xs text-muted mt-6">
-              Tanpa perlu kartu kredit • 3 modul pertama gratis penuh tanpa batasan fitur
+              Standar format BSKAP No. 032/H/KR/2024 • Siap ekspor Microsoft Word (.docx)
             </p>
           </div>
         </section>
@@ -594,7 +588,7 @@ export default function LandingPage() {
               Modulin
             </Link>
             <p className="text-xs text-on-dark-soft max-w-sm leading-relaxed">
-              © 2026 Modulin. Hak Cipta Dilindungi. Dibuat khusus untuk kemajuan pendidikan Indonesia.
+              © 2026 Modulin. Perangkat ajar berstandar Kurikulum Merdeka.
             </p>
           </div>
           

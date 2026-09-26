@@ -1,39 +1,45 @@
 import type { ModelPembelajaran } from "@/types/modul";
 
+/**
+ * 6 Model Pembelajaran Resmi Kurikulum Merdeka
+ * Sesuai PRD.md, AGENT.md, SCHEMA.md, dan modul_schema.sql
+ */
 export const MODEL_PEMBELAJARAN: ModelPembelajaran[] = [
   {
     id: "pbl",
-    nama: "Problem Based Learning",
+    nama: "Problem-Based Learning",
     singkatan: "PBL",
     deskripsi:
-      "Model pembelajaran yang menggunakan masalah dunia nyata sebagai konteks bagi murid untuk belajar berpikir kritis, keterampilan pemecahan masalah, serta memperoleh pengetahuan dan konsep esensial.",
+      "Pembelajaran berbasis masalah nyata. Peserta didik menganalisis data, meneliti, dan merumuskan solusi.",
+    fokus: "Pemecahan masalah kontekstual yang berfokus pada perumusan solusi konkret.",
     langkahLangkah: [
-      "Orientasi murid pada masalah",
-      "Mengorganisasi murid untuk belajar",
-      "Membimbing penyelidikan individu maupun kelompok",
-      "Mengembangkan dan menyajikan hasil karya",
-      "Menganalisis dan mengevaluasi proses pemecahan masalah",
+      "Fase 1: Orientasi murid pada masalah",
+      "Fase 2: Mengorganisasi murid untuk belajar dan meneliti",
+      "Fase 3: Membimbing penyelidikan individu maupun kelompok",
+      "Fase 4: Mengembangkan dan menyajikan hasil solusi",
+      "Fase 5: Menganalisis dan mengevaluasi proses pemecahan masalah",
     ],
     cocokUntuk:
-      "Mata pelajaran yang membutuhkan analisis mendalam seperti IPA, IPS, dan Matematika",
+      "Materi analitis yang menuntut penalaran kritis dan pemecahan kasus kontekstual (IPA, IPS, Matematika, PKn).",
     icon: "🧩",
   },
   {
     id: "pjbl",
-    nama: "Project Based Learning",
+    nama: "Project-Based Learning",
     singkatan: "PjBL",
     deskripsi:
-      "Model pembelajaran yang menggunakan proyek/kegiatan sebagai media. Murid melakukan eksplorasi, penilaian, interpretasi, sintesis, dan informasi untuk menghasilkan berbagai bentuk hasil belajar.",
+      "Pembelajaran berbasis proyek berjadwal. Peserta didik merancang, mewujudkan, dan mempresentasikan karya nyata.",
+    fokus: "Penyusunan karya dan artefak nyata melalui tahapan proyek terencana.",
     langkahLangkah: [
-      "Penentuan pertanyaan mendasar (Start with Essential Question)",
-      "Mendesain perencanaan proyek",
-      "Menyusun jadwal (Create a Schedule)",
-      "Memonitor murid dan kemajuan proyek",
-      "Menguji hasil (Assess the Outcome)",
-      "Mengevaluasi pengalaman (Evaluate the Experience)",
+      "Fase 1: Penentuan pertanyaan mendasar (Essential Question)",
+      "Fase 2: Perancangan desain proyek dan pembagian peran",
+      "Fase 3: Penyusunan jadwal pelaksanaan (Create a Schedule)",
+      "Fase 4: Pemantauan kemajuan proyek (Monitoring)",
+      "Fase 5: Penilaian hasil karya (Assess the Outcome)",
+      "Fase 6: Evaluasi pengalaman belajar (Evaluation)",
     ],
     cocokUntuk:
-      "Proyek interdisipliner, Prakarya, Seni, IPAS, P5 (Projek Penguatan Profil Pelajar Pancasila)",
+      "Proyek interdisipliner, Praktik Kejuruan (SMK), Prakarya, Seni, IPAS, Bahasa, P5.",
     icon: "🚀",
   },
   {
@@ -41,191 +47,123 @@ export const MODEL_PEMBELAJARAN: ModelPembelajaran[] = [
     nama: "Discovery Learning",
     singkatan: "DL",
     deskripsi:
-      "Model pembelajaran yang mengarahkan murid untuk menemukan sendiri konsep, makna, dan hubungan melalui serangkaian data atau informasi yang diperoleh melalui pengamatan atau percobaan.",
+      "Pembelajaran melalui observasi dan percobaan terarah untuk membuktikan konsep keilmuan.",
+    fokus: "Penemuan konsep melalui eksplorasi terarah dan verifikasi data empiris.",
     langkahLangkah: [
-      "Stimulasi (Stimulation)",
-      "Identifikasi masalah (Problem Statement)",
-      "Pengumpulan data (Data Collection)",
-      "Pengolahan data (Data Processing)",
-      "Pembuktian (Verification)",
-      "Menarik kesimpulan (Generalization)",
+      "Fase 1: Pemberian rangsangan (Stimulation)",
+      "Fase 2: Identifikasi masalah dan hipotesis (Problem Statement)",
+      "Fase 3: Pengumpulan data eksperimen atau observasi (Data Collection)",
+      "Fase 4: Pengolahan data dan analisis (Data Processing)",
+      "Fase 5: Pembuktian hipotesis (Verification)",
+      "Fase 6: Penarikan kesimpulan konsep (Generalization)",
     ],
     cocokUntuk:
-      "IPA, Matematika, dan mata pelajaran yang membutuhkan eksperimen atau pengamatan",
+      "Sains, Matematika, dan materi yang membutuhkan pembuktian hukum alam atau fakta empiris.",
     icon: "🔍",
   },
   {
-    id: "inquiry",
+    id: "il",
     nama: "Inquiry Learning",
     singkatan: "IL",
     deskripsi:
-      "Model pembelajaran yang menekankan pada proses berpikir secara kritis dan analitis untuk mencari dan menemukan sendiri jawaban dari suatu masalah yang dipertanyakan.",
+      "Pembelajaran berbasis penyelidikan ilmiah melalui perumusan pertanyaan dan uji hipotesis.",
+    fokus: "Penyelidikan ilmiah untuk menjawab pertanyaan penelitian berbasis bukti.",
     langkahLangkah: [
-      "Orientasi",
-      "Merumuskan masalah",
-      "Merumuskan hipotesis",
-      "Mengumpulkan data",
-      "Menguji hipotesis",
-      "Merumuskan kesimpulan",
+      "Fase 1: Orientasi konteks dan fenomena",
+      "Fase 2: Perumusan masalah penyelidikan",
+      "Fase 3: Perumusan hipotesis sementara",
+      "Fase 4: Pengumpulan data melalui investigasi",
+      "Fase 5: Pengujian hipotesis dengan data empiris",
+      "Fase 6: Penarikan kesimpulan dan pelaporan hasil",
     ],
     cocokUntuk:
-      "Sains, Matematika, dan mata pelajaran yang memerlukan penalaran logis",
+      "IPA, Fisika, Kimia, Biologi, IPS Terpadu, Sejarah, dan riset ilmiah.",
     icon: "🔬",
-  },
-  {
-    id: "ctl",
-    nama: "Contextual Teaching and Learning",
-    singkatan: "CTL",
-    deskripsi:
-      "Model pembelajaran yang mengaitkan materi yang diajarkan dengan situasi dunia nyata murid dan mendorong murid membuat hubungan antara pengetahuan yang dimilikinya dengan penerapannya dalam kehidupan.",
-    langkahLangkah: [
-      "Konstruktivisme (Constructivism)",
-      "Menemukan (Inquiry)",
-      "Bertanya (Questioning)",
-      "Masyarakat belajar (Learning Community)",
-      "Pemodelan (Modeling)",
-      "Refleksi (Reflection)",
-      "Penilaian autentik (Authentic Assessment)",
-    ],
-    cocokUntuk:
-      "Semua mata pelajaran, terutama yang berkaitan dengan kehidupan sehari-hari",
-    icon: "🌍",
   },
   {
     id: "cooperative",
     nama: "Cooperative Learning",
     singkatan: "CL",
     deskripsi:
-      "Model pembelajaran yang menggunakan kelompok kecil sehingga murid bekerja bersama untuk memaksimalkan pembelajaran mereka sendiri dan anggota kelompok lainnya. Termasuk di dalamnya Jigsaw, STAD, TGT, dll.",
+      "Pembelajaran kelompok kecil dengan pembagian peran terstruktur dan tanggung jawab individu.",
+    fokus: "Kolaborasi terstruktur dalam kelompok untuk mencapai tujuan belajar bersama.",
     langkahLangkah: [
-      "Menyampaikan tujuan dan memotivasi murid",
-      "Menyajikan informasi",
-      "Mengorganisasikan murid ke dalam kelompok kooperatif",
-      "Membimbing kelompok bekerja dan belajar",
-      "Evaluasi",
-      "Memberikan penghargaan",
+      "Fase 1: Penyampaian tujuan dan motivasi belajar",
+      "Fase 2: Penyajian informasi pengantar",
+      "Fase 3: Pengorganisasian kelompok kooperatif",
+      "Fase 4: Bimbingan kerja kelompok dan diskusi",
+      "Fase 5: Evaluasi hasil belajar per kelompok dan individu",
+      "Fase 6: Pemberian penghargaan kelompok",
     ],
     cocokUntuk:
-      "Semua mata pelajaran, cocok untuk membangun kemampuan sosial dan kolaborasi",
+      "Mata pelajaran umum, penguatan gotong royong, komunikasi, dan kecerdasan sosial.",
     icon: "🤝",
   },
   {
-    id: "flipped",
-    nama: "Flipped Classroom",
-    singkatan: "FC",
+    id: "circ",
+    nama: "Cooperative Integrated Reading & Composition",
+    singkatan: "CIRC",
     deskripsi:
-      "Model pembelajaran terbalik di mana murid mempelajari materi di rumah (melalui video, bacaan) dan menggunakan waktu kelas untuk diskusi, praktik, dan pendalaman.",
+      "Model kooperatif terpadu untuk penguatan keterampilan membaca analitis dan menulis terstruktur.",
+    fokus: "Literasi membaca analitis dan penulisan teks secara kolaboratif.",
     langkahLangkah: [
-      "Persiapan materi pra-kelas (video/bacaan)",
-      "Murid belajar mandiri di rumah",
-      "Kegiatan kelas: diskusi, praktik, pendalaman",
-      "Asesmen pemahaman",
-      "Refleksi dan umpan balik",
+      "Fase 1: Orientasi wacana dan prediksi isi teks",
+      "Fase 2: Pembentukan tim dan pembagian bahan bacaan",
+      "Fase 3: Pembacaan mandiri dan pencatatan ide pokok",
+      "Fase 4: Diskusi kelompok dan pertukaran telaah teks",
+      "Fase 5: Latihan menulis terpadu atau ringkasan kelompok",
+      "Fase 6: Evaluasi hasil karya tulis berdasarkan rubrik membaca-menulis",
     ],
     cocokUntuk:
-      "Mata pelajaran dengan banyak konsep teori, cocok di jenjang SMP-SMA",
-    icon: "🔄",
+      "Bahasa Indonesia, Bahasa Inggris, Literasi Teks, Sejarah, dan Pendidikan Agama.",
+    icon: "📖",
   },
 ];
 
+/**
+ * Fase Kurikulum Merdeka (Fondasi sampai F)
+ */
 export const FASE_KURIKULUM = [
-  { id: "A", label: "Fase A (Kelas 1-2 SD)", jenjang: "SD" },
-  { id: "B", label: "Fase B (Kelas 3-4 SD)", jenjang: "SD" },
-  { id: "C", label: "Fase C (Kelas 5-6 SD)", jenjang: "SD" },
-  { id: "D", label: "Fase D (Kelas 7-9 SMP)", jenjang: "SMP" },
-  { id: "E", label: "Fase E (Kelas 10 SMA)", jenjang: "SMA" },
-  { id: "F", label: "Fase F (Kelas 11-12 SMA)", jenjang: "SMA" },
+  {
+    id: "fondasi",
+    label: "Fase Fondasi (PAUD / TK)",
+    jenjang: "PAUD",
+    keterangan: "Menggunakan Capaian Perkembangan dan pendekatan bermain-belajar konkret",
+  },
+  { id: "A", label: "Fase A (Kelas 1-2 SD)", jenjang: "SD", keterangan: "Literasi awal & konkret" },
+  { id: "B", label: "Fase B (Kelas 3-4 SD)", jenjang: "SD", keterangan: "Transisi konkret ke semi-abstrak" },
+  { id: "C", label: "Fase C (Kelas 5-6 SD)", jenjang: "SD", keterangan: "Pemahaman konsep dasar mandiri" },
+  { id: "D", label: "Fase D (Kelas 7-9 SMP)", jenjang: "SMP", keterangan: "Penalaran logis & analisis dasar" },
+  { id: "E", label: "Fase E (Kelas 10 SMA/SMK)", jenjang: "SMA", keterangan: "Eksplorasi minat & analisis kritis" },
+  { id: "F", label: "Fase F (Kelas 11-12 SMA/SMK)", jenjang: "SMA", keterangan: "Penjurian bidang & kematangan akademik/kejuruan" },
 ];
 
-export const MODUL_SECTIONS_TEMPLATE = [
-  {
-    id: "informasi-umum",
-    judul: "A. Informasi Umum",
-    urutan: 1,
-  },
-  {
-    id: "kompetensi-awal",
-    judul: "B. Kompetensi Awal",
-    urutan: 2,
-  },
-  {
-    id: "profil-pelajar-pancasila",
-    judul: "C. Profil Pelajar Pancasila",
-    urutan: 3,
-  },
-  {
-    id: "sarana-prasarana",
-    judul: "D. Sarana dan Prasarana",
-    urutan: 4,
-  },
-  {
-    id: "target-peserta-didik",
-    judul: "E. Target Peserta Didik",
-    urutan: 5,
-  },
-  {
-    id: "capaian-pembelajaran",
-    judul: "F. Capaian Pembelajaran (CP)",
-    urutan: 6,
-  },
-  {
-    id: "tujuan-pembelajaran",
-    judul: "G. Tujuan Pembelajaran",
-    urutan: 7,
-  },
-  {
-    id: "pemahaman-bermakna",
-    judul: "H. Pemahaman Bermakna",
-    urutan: 8,
-  },
-  {
-    id: "pertanyaan-pemantik",
-    judul: "I. Pertanyaan Pemantik",
-    urutan: 9,
-  },
-  {
-    id: "kegiatan-pembelajaran",
-    judul: "J. Kegiatan Pembelajaran",
-    urutan: 10,
-  },
-  {
-    id: "asesmen",
-    judul: "K. Asesmen",
-    urutan: 11,
-  },
-  {
-    id: "pengayaan-remedial",
-    judul: "L. Pengayaan dan Remedial",
-    urutan: 12,
-  },
-  {
-    id: "refleksi",
-    judul: "M. Refleksi Guru dan Peserta Didik",
-    urutan: 13,
-  },
-  {
-    id: "lampiran",
-    judul: "N. Lampiran",
-    urutan: 14,
-  },
-  {
-    id: "lkpd",
-    judul: "O. Lembar Kerja Peserta Didik (LKPD)",
-    urutan: 15,
-  },
-  {
-    id: "rubrik-penilaian",
-    judul: "P. Rubrik Penilaian",
-    urutan: 16,
-  },
-  {
-    id: "glosarium",
-    judul: "Q. Glosarium",
-    urutan: 17,
-  },
-  {
-    id: "daftar-pustaka",
-    judul: "R. Daftar Pustaka",
-    urutan: 18,
-  },
-];
+/**
+ * Otomatisasi penentuan Fase berdasarkan Jenjang dan Kelas
+ */
+export function determineFase(jenjang: string, kelas: string): string {
+  const j = (jenjang || "").toUpperCase();
+  const k = (kelas || "").trim();
+
+  if (j === "PAUD" || j === "TK" || j.includes("PAUD") || j.includes("TK")) {
+    return "fondasi";
+  }
+
+  if (j === "SD" || j.includes("SD") || j.includes("MI")) {
+    if (k === "1" || k === "2") return "A";
+    if (k === "3" || k === "4") return "B";
+    if (k === "5" || k === "6") return "C";
+    return "A";
+  }
+
+  if (j === "SMP" || j.includes("SMP") || j.includes("MTS")) {
+    return "D";
+  }
+
+  if (j === "SMA" || j === "SMK" || j.includes("SMA") || j.includes("SMK") || j.includes("MA")) {
+    if (k === "10" || k.toUpperCase() === "X") return "E";
+    return "F";
+  }
+
+  return "D";
+}
