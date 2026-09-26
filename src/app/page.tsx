@@ -1,607 +1,1268 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
-  ArrowRight,
-  Sparkles,
-  FileText,
-  BadgeCheck,
-  ShieldCheck,
-  SlidersHorizontal,
   BookOpen,
-  Brain,
-  Printer,
+  BadgeCheck,
+  Download,
+  X,
+  Check,
+  FileText,
   ChevronRight,
   Info,
   Target,
   Users,
-  Check,
   BarChart,
   Clipboard,
-  Download,
   Bot,
   PlusSquare,
   Send,
+  ArrowRight,
 } from "lucide-react";
 
+/* Typewriter Data for Hero Section */
+const HERO_TYPEWRITER = {
+  label1: "Tujuan Pembelajaran",
+  content1:
+    "Peserta didik mampu menganalisis interaksi antarkomponen ekosistem dan merancang solusi pelestarian lingkungan secara terstruktur.",
+  label2: "Tahap 1: Orientasi Masalah",
+  content2:
+    "Guru menayangkan video studi kasus abrasi pesisir. Siswa merumuskan pertanyaan penyelidikan mandiri dalam kelompok.",
+};
+
+/* 6 Model Pembelajaran Data */
+interface ModelDetail {
+  id: string;
+  name: string;
+  description: string;
+  steps: string[];
+  example: string;
+}
+
+const MODELS_DATA: ModelDetail[] = [
+  {
+    id: "pbl",
+    name: "Problem-Based Learning (PBL)",
+    description:
+      "Pembelajaran berbasis masalah kontekstual untuk mengasah kemampuan investigasi dan nalar kritis siswa.",
+    steps: [
+      "Orientasi Masalah",
+      "Organisasi Belajar",
+      "Penyelidikan Mandiri",
+      "Penyajian Solusi",
+      "Evaluasi Proses",
+    ],
+    example:
+      "Tahap Orientasi Masalah: Siswa mengamati video dokumenter abrasi pesisir utara dan mencatat 3 rumusan persoalan prioritas.",
+  },
+  {
+    id: "pjbl",
+    name: "Project-Based Learning (PjBL)",
+    description:
+      "Pembelajaran berbasis proyek berjadwal yang menghasilkan produk nyata melalui serangkaian tahapan terencana.",
+    steps: [
+      "Pertanyaan Mendasar",
+      "Desain Proyek",
+      "Penyusunan Jadwal",
+      "Monitoring Karya",
+      "Uji Hasil & Evaluasi",
+    ],
+    example:
+      "Tahap Desain Proyek: Setiap kelompok merancang sketsa miniatur tanggul biopori ramah lingkungan serta membagi tugas anggota.",
+  },
+  {
+    id: "dl",
+    name: "Discovery Learning",
+    description:
+      "Pembelajaran melalui observasi dan eksplorasi terarah untuk membuktikan konsep keilmuan secara empiris.",
+    steps: [
+      "Stimulasi",
+      "Identifikasi Masalah",
+      "Pengumpulan Data",
+      "Pengolahan Data",
+      "Pembuktian Konsep",
+    ],
+    example:
+      "Tahap Pengumpulan Data: Siswa menguji derajat keasaman tiga sampel cairan menggunakan kertas lakmus di laboratorium.",
+  },
+  {
+    id: "inquiry",
+    name: "Inquiry Terbimbing",
+    description:
+      "Penyelidikan saintifik terpandu untuk menjawab pertanyaan penelitian melalui eksperimen berbasis bukti.",
+    steps: [
+      "Orientasi Konteks",
+      "Rumusan Masalah",
+      "Pengajuan Hipotesis",
+      "Eksperimen Lapangan",
+      "Kesimpulan Ilmiah",
+    ],
+    example:
+      "Tahap Eksperimen: Siswa menguji pengaruh variasi massa beban terhadap periode ayunan bandul sederhana secara berulang.",
+  },
+  {
+    id: "diferensiasi",
+    name: "Pembelajaran Berdiferensiasi",
+    description:
+      "Penyesuaian konten, proses, dan produk belajar berdasarkan profil kesiapan dan modalitas belajar murid.",
+    steps: [
+      "Asesmen Awal",
+      "Pemetaan Minat",
+      "Diferensiasi Proses",
+      "Diferensiasi Produk",
+      "Refleksi Capaian",
+    ],
+    example:
+      "Tahap Diferensiasi Proses: Siswa visual menelaah diagram infografis siklus rantai makanan, sedangkan siswa auditori mendengarkan rekaman narasi.",
+  },
+  {
+    id: "cooperative",
+    name: "Cooperative Learning",
+    description:
+      "Kerja kelompok terstruktur dengan pembagian peran terencana dan pertanggungjawaban individu.",
+    steps: [
+      "Penyampaian Tujuan",
+      "Penyajian Informasi",
+      "Pembentukan Tim",
+      "Kerja Kelompok",
+      "Evaluasi & Apresiasi",
+    ],
+    example:
+      "Tahap Kerja Kelompok: Setiap anggota tim mendalami satu subtopik ekosistem lalu saling bertukar materi melalui metode Jigsaw.",
+  },
+];
+
 export default function LandingPage() {
+  /* 1. Splash Screen States */
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+  const [mainVisible, setMainVisible] = useState(false);
+
+  /* Reduced Motion Detection */
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  /* 3. Hero Typewriter States */
+  const [typewriterIndex, setTypewriterIndex] = useState(0);
+
+  /* 5. Features Intersection Observer State */
+  const [featuresVisible, setFeaturesVisible] = useState(false);
+  const featuresRef = useRef<HTMLDivElement>(null);
+
+  /* 6. Editor Preview Document Animation States */
+  const [docBlockCount, setDocBlockCount] = useState(0);
+  const [docFadingOut, setDocFadingOut] = useState(false);
+
+  /* 7. Stepper States */
+  const [activeStep, setActiveStep] = useState(0);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+
+  /* 8. Learning Models State */
+  const [selectedModelId, setSelectedModelId] = useState("pbl");
+
+  /* Initialize reduced motion and Splash Screen Timer */
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mediaQuery.matches) {
+      setPrefersReducedMotion(true);
+      setShowSplash(false);
+      setMainVisible(true);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSplashFading(true);
+      setMainVisible(true);
+
+      const hideTimer = setTimeout(() => {
+        setShowSplash(false);
+      }, 400);
+
+      return () => clearTimeout(hideTimer);
+    }, 2200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  /* Hero Section Typewriter Loop */
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    const totalChars =
+      HERO_TYPEWRITER.label1.length +
+      HERO_TYPEWRITER.content1.length +
+      HERO_TYPEWRITER.label2.length +
+      HERO_TYPEWRITER.content2.length;
+
+    let timeoutId: NodeJS.Timeout;
+
+    if (typewriterIndex < totalChars) {
+      timeoutId = setTimeout(() => {
+        setTypewriterIndex((prev) => prev + 1);
+      }, 28);
+    } else {
+      // Completed, blink cursor for 1.5s then restart
+      timeoutId = setTimeout(() => {
+        setTypewriterIndex(0);
+      }, 1500);
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [typewriterIndex, prefersReducedMotion]);
+
+  /* Intersection Observer for Features (Before vs After) */
+  useEffect(() => {
+    if (!featuresRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setFeaturesVisible(true);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(featuresRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  /* Editor Preview Document Fade per Block Loop */
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setDocBlockCount(5);
+      return;
+    }
+
+    let timer: NodeJS.Timeout;
+
+    if (docBlockCount < 5 && !docFadingOut) {
+      timer = setTimeout(() => {
+        setDocBlockCount((prev) => prev + 1);
+      }, 1200);
+    } else if (docBlockCount === 5 && !docFadingOut) {
+      // Hold for 2.0s with blinking cursor, then fade out
+      timer = setTimeout(() => {
+        setDocFadingOut(true);
+      }, 2000);
+    } else if (docFadingOut) {
+      // Fade out slowly (800ms) and restart from 0
+      timer = setTimeout(() => {
+        setDocBlockCount(0);
+        setDocFadingOut(false);
+      }, 800);
+    }
+
+    return () => clearTimeout(timer);
+  }, [docBlockCount, docFadingOut, prefersReducedMotion]);
+
+  /* Stepper Auto-Advance (3.5s loop, stops on user click) */
+  useEffect(() => {
+    if (!autoAdvance || prefersReducedMotion) return;
+
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % 3);
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [autoAdvance, prefersReducedMotion]);
+
+  /* Helper to calculate typed strings in hero typewriter */
+  const l1 = HERO_TYPEWRITER.label1.length;
+  const l2 = HERO_TYPEWRITER.content1.length;
+  const l3 = HERO_TYPEWRITER.label2.length;
+  const l4 = HERO_TYPEWRITER.content2.length;
+
+  const currentLabel1 = prefersReducedMotion
+    ? HERO_TYPEWRITER.label1
+    : HERO_TYPEWRITER.label1.slice(0, Math.min(typewriterIndex, l1));
+
+  const currentContent1 = prefersReducedMotion
+    ? HERO_TYPEWRITER.content1
+    : typewriterIndex > l1
+    ? HERO_TYPEWRITER.content1.slice(0, Math.min(typewriterIndex - l1, l2))
+    : "";
+
+  const currentLabel2 = prefersReducedMotion
+    ? HERO_TYPEWRITER.label2
+    : typewriterIndex > l1 + l2
+    ? HERO_TYPEWRITER.label2.slice(0, Math.min(typewriterIndex - l1 - l2, l3))
+    : "";
+
+  const currentContent2 = prefersReducedMotion
+    ? HERO_TYPEWRITER.content2
+    : typewriterIndex > l1 + l2 + l3
+    ? HERO_TYPEWRITER.content2.slice(
+        0,
+        Math.min(typewriterIndex - l1 - l2 - l3, l4)
+      )
+    : "";
+
+  const isCompleteHero = typewriterIndex >= l1 + l2 + l3 + l4;
+  const activeHeroField =
+    typewriterIndex >= l1 + l2 + l3
+      ? "content2"
+      : typewriterIndex >= l1 + l2
+      ? "label2"
+      : typewriterIndex >= l1
+      ? "content1"
+      : "label1";
+
+  const selectedModel =
+    MODELS_DATA.find((m) => m.id === selectedModelId) || MODELS_DATA[0];
+
   return (
-    <div className="bg-canvas text-ink font-body antialiased selection:bg-primary-light selection:text-primary min-h-screen flex flex-col">
-      {/* ==================== TOP NAVIGATION BAR ==================== */}
-      <header className="bg-canvas border-b border-hairline sticky top-0 z-50 h-14">
-        <div className="flex justify-between items-center max-w-5xl mx-auto px-6 h-full">
-          {/* Brand Logo */}
-          <Link
-            href="/"
-            className="font-display text-2xl font-semibold tracking-tight text-ink flex items-center gap-2"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
-            Modulin
-          </Link>
+    <div className="bg-[#faf8f4] text-[#1a1917] font-body antialiased selection:bg-[#e6f3f0] selection:text-[#2a7d6e] min-h-screen flex flex-col relative">
+      {/* ==================== 1. SPLASH SCREEN ==================== */}
+      {showSplash && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#faf8f4] transition-opacity duration-400 ease-out ${
+            splashFading ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          <div className="flex flex-col items-center">
+            {/* Logotype in Cormorant Garamond SemiBold with fade-in scale */}
+            <div className="flex flex-col items-center animate-splash-logo">
+              <Image src="/modulin-logo-2.png" alt="Modulin Logo" width={80} height={80} className="rounded-2xl object-contain mb-4" />
+              <span className="font-display font-semibold text-5xl sm:text-6xl text-[#1a1917] tracking-tight">
+                Modulin
+              </span>
+            </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              href="#beranda"
-              className="text-primary font-medium border-b-2 border-primary pb-1 text-sm transition-colors duration-200"
-            >
-              Beranda
-            </Link>
-            <Link
-              href="#fitur"
-              className="text-muted font-medium hover:text-primary text-sm transition-colors duration-200"
-            >
-              Fitur
-            </Link>
-            <Link
-              href="#model-pembelajaran"
-              className="text-muted font-medium hover:text-primary text-sm transition-colors duration-200"
-            >
-              Model Pembelajaran
-            </Link>
-            <Link
-              href="#harga"
-              className="text-muted font-medium hover:text-primary text-sm transition-colors duration-200"
-            >
-              Harga
-            </Link>
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="hidden sm:inline-block text-sm font-medium text-ink hover:text-primary transition-colors duration-200 px-3 py-1.5"
-            >
-              Masuk
-            </Link>
-            <Link
-              href="/create"
-              className="bg-primary text-on-primary text-sm font-medium px-4 py-2 rounded-md hover:bg-primary-active transition-all duration-200 shadow-sm flex items-center gap-1.5"
-            >
-              <span>Mulai Buat Modul</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {/* Three sequential pulsing dots in teal */}
+            <div className="mt-6 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2a7d6e] animate-pulse-seq-1" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2a7d6e] animate-pulse-seq-2" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2a7d6e] animate-pulse-seq-3" />
+            </div>
           </div>
         </div>
-      </header>
+      )}
 
-      <main className="flex-1">
-        {/* ==================== HERO SECTION ==================== */}
-        <section
-          id="beranda"
-          className="relative pt-16 pb-20 md:pt-24 md:pb-32 overflow-hidden border-b border-hairline"
-        >
-          <div className="max-w-5xl mx-auto px-6">
-            {/* Curated Badge */}
-            <div className="flex justify-center md:justify-start mb-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-soft border border-hairline text-body text-xs font-medium tracking-wide">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                <span>Kurikulum Merdeka • Standar BSKAP No. 032/H/KR/2024</span>
+      {/* ==================== MAIN PAGE CONTAINER ==================== */}
+      <div
+        className={`flex-1 flex flex-col transition-opacity duration-500 ${
+          mainVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        {/* ==================== 2. NAVIGASI ==================== */}
+        <header className="h-[56px] bg-[#faf8f4] border-b border-[#e2dbd0] sticky top-0 z-40 w-full">
+          <div className="max-w-5xl mx-auto px-6 h-full flex items-center justify-between">
+            {/* Kiri: Logotype Modulin Cormorant Garamond SemiBold 24px */}
+            <Link
+              href="/"
+              className="flex items-center gap-2"
+            >
+              <Image src="/modulin-logo-2.png" alt="Modulin Logo" width={32} height={32} className="rounded-md object-contain" />
+              <span className="font-display font-semibold text-[24px] text-[#1a1917] tracking-tight">Modulin</span>
+            </Link>
+
+            {/* Kanan: Tombol Masuk dengan Google */}
+            <Link
+              href="/login"
+              className="h-10 bg-[#2a7d6e] text-white text-sm font-medium rounded-[8px] px-5 py-2.5 hover:bg-[#1f6358] hover:-translate-y-px transition-all duration-200 inline-flex items-center justify-center cursor-pointer shadow-sm"
+            >
+              Masuk dengan Google
+            </Link>
+          </div>
+        </header>
+
+        <main className="flex-1">
+          {/* ==================== 3. HERO SECTION ==================== */}
+          <section className="pt-16 pb-20 md:pt-24 md:pb-28 border-b border-[#e2dbd0]">
+            <div className="max-w-5xl mx-auto px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                {/* Kolom Kiri: 7 Kolom */}
+                <div className="lg:col-span-7">
+                  <h1 className="font-display font-semibold text-4xl sm:text-5xl lg:text-[52px] leading-[1.1] tracking-[-1px] text-[#1a1917] mb-4">
+                    3 hingga 6 jam jadi 15 menit.
+                  </h1>
+                  <p className="text-[15px] font-normal text-[#444340] leading-relaxed mb-8">
+                    Modul ajar Kurikulum Merdeka, format resmi, siap ekspor Word.
+                  </p>
+
+                  {/* CTA Buttons */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <Link
+                      href="/create"
+                      className="w-full sm:w-auto h-11 bg-[#2a7d6e] hover:bg-[#1f6358] text-white text-sm font-medium px-6 rounded-[8px] flex items-center justify-center gap-2 transition-all duration-200 shadow-sm cursor-pointer"
+                    >
+                      <span>Buat Modul Ajar</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      href="/editor"
+                      className="w-full sm:w-auto h-11 border border-[#e2dbd0] bg-[#faf8f4] hover:bg-[#f0ebe0] text-[#1a1917] text-sm font-medium px-6 rounded-[8px] flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 text-[#6b6862]" />
+                      <span>Lihat Contoh Format</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Kolom Kanan: 5 Kolom (AI Typing Card & Floating Badges) */}
+                <div className="lg:col-span-5 relative mt-6 lg:mt-0">
+                  {/* Floating Badge 1: Kiri Atas */}
+                  <div className="absolute -top-5 -left-2 sm:-left-4 z-20 bg-[#faf8f4] border border-[#e2dbd0] shadow-sm rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-[#1a1917] animate-float-1">
+                    <BookOpen className="w-4 h-4 text-[#2a7d6e]" />
+                    <span>Fase D Kelas 7</span>
+                  </div>
+
+                  {/* Floating Badge 2: Kanan Tengah */}
+                  <div className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 bg-[#faf8f4] border border-[#e2dbd0] shadow-sm rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-[#1a1917] animate-float-2">
+                    <BadgeCheck className="w-4 h-4 text-[#2a7d6e]" />
+                    <span>Format BSKAP Resmi</span>
+                  </div>
+
+                  {/* Floating Badge 3: Bawah Card */}
+                  <div className="absolute -bottom-5 left-6 sm:left-10 z-20 bg-[#faf8f4] border border-[#e2dbd0] shadow-sm rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-[#1a1917] animate-float-3">
+                    <Download className="w-4 h-4 text-[#2a7d6e]" />
+                    <span>Ekspor Word & PDF</span>
+                  </div>
+
+                  {/* Card AI Real-time Typing */}
+                  <div className="bg-[#f0ebe0] rounded-xl border border-[#e2dbd0] p-6 shadow-sm relative min-h-[300px] flex flex-col justify-between">
+                    <div>
+                      {/* Status AI Sedang Menyusun */}
+                      <div className="flex items-center gap-2 mb-5">
+                        <span className="w-2 h-2 rounded-full bg-[#2a7d6e] animate-pulse" />
+                        <span className="text-[11px] font-medium text-[#2a7d6e] tracking-normal">
+                          AI sedang menyusun...
+                        </span>
+                      </div>
+
+                      {/* Simulasi Teks Muncul Karakter demi Karakter */}
+                      <div className="space-y-4">
+                        {/* Section Label 1 & Content */}
+                        <div className="p-3 bg-[#faf8f4] rounded-lg border border-[#e2dbd0]">
+                          <span className="text-[11px] font-semibold text-[#2a7d6e] block mb-1">
+                            {currentLabel1}
+                            {activeHeroField === "label1" && (
+                              <span className="inline-block w-1.5 h-3 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
+                            )}
+                          </span>
+                          <p className="text-xs text-[#444340] leading-relaxed">
+                            {currentContent1}
+                            {activeHeroField === "content1" && (
+                              <span className="inline-block w-1.5 h-3.5 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
+                            )}
+                          </p>
+                        </div>
+
+                        {/* Section Label 2 & Content */}
+                        {(typewriterIndex > l1 + l2 || prefersReducedMotion) && (
+                          <div className="p-3 bg-[#faf8f4] rounded-lg border border-[#e2dbd0]">
+                            <span className="text-[11px] font-semibold text-[#2a7d6e] block mb-1">
+                              {currentLabel2}
+                              {activeHeroField === "label2" && (
+                                <span className="inline-block w-1.5 h-3 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
+                              )}
+                            </span>
+                            <p className="text-xs text-[#444340] leading-relaxed">
+                              {currentContent2}
+                              {(activeHeroField === "content2" ||
+                                isCompleteHero) && (
+                                <span className="inline-block w-1.5 h-3.5 bg-[#2a7d6e] ml-0.5 animate-blink align-middle" />
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-[#e2dbd0] flex items-center justify-between text-[11px] text-[#6b6862]">
+                      <span>Model: Problem-Based Learning</span>
+                      <span>Sintaks 5 Tahap</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          </section>
 
-            {/* Editorial Hero Headline & Description */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-7 text-center md:text-left">
-                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-ink leading-[1.08] mb-6">
-                  Susun Modul Ajar Resmi <span className="italic font-normal text-primary">dalam Hitungan Menit.</span>
-                </h1>
-                <p className="text-base sm:text-lg text-body leading-relaxed mb-8 max-w-xl">
-                  Pilih model pembelajaran dan materi pokok. Dapatkan perangkat ajar lengkap dengan sintaks kegiatan, diferensiasi proses, dan rubrik asesmen siap cetak.
-                </p>
+          {/* ==================== 4. SOCIAL PROOF ==================== */}
+          <section className="bg-[#f0ebe0] border-b border-[#e2dbd0] py-5 px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <p className="text-sm font-normal text-[#444340] leading-relaxed">
+                "Rata-rata guru Indonesia menghabiskan 3 hingga 6 jam untuk
+                menyusun satu modul ajar secara manual."{" "}
+                <span className="text-xs text-[#6b6862]">
+                  (Kemendikbud, Survei Beban Administratif Guru 2023)
+                </span>
+              </p>
+            </div>
+          </section>
 
-                {/* CTA Actions */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
-                  <Link
-                    href="/create"
-                    className="w-full sm:w-auto bg-primary text-on-primary text-sm font-medium px-6 py-3 rounded-md hover:bg-primary-active transition-all duration-200 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    <span>Buat Modul Ajar</span>
-                  </Link>
-                  <Link
-                    href="/editor"
-                    className="w-full sm:w-auto border border-hairline bg-surface-card text-ink text-sm font-medium px-6 py-3 rounded-md hover:bg-surface-soft transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <FileText className="w-5 h-5 text-muted" />
-                    <span>Lihat Contoh Format Resmi</span>
-                  </Link>
+          {/* ==================== 5. FITUR: SEBELUM VS SESUDAH ==================== */}
+          <section className="py-20 md:py-24 bg-[#faf8f4] border-b border-[#e2dbd0]">
+            <div className="max-w-5xl mx-auto px-6">
+              <div
+                ref={featuresRef}
+                className="grid grid-cols-1 md:grid-cols-2 rounded-xl overflow-hidden border border-[#e2dbd0] relative"
+              >
+                {/* Kolom Kiri: Tanpa Modulin */}
+                <div className="bg-[#fef2f0] p-8 md:p-10 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xs uppercase tracking-wide font-semibold text-[#c4503d] mb-6">
+                      Tanpa Modulin
+                    </h3>
+                    <ul className="space-y-5">
+                      {[
+                        "Menyalin dari internet, format tidak sesuai standar pengawas",
+                        "3 hingga 6 jam per modul, belum termasuk revisi",
+                        "Capaian Pembelajaran tidak selaras dengan fase kelas",
+                        "Rubrik asesmen dibuat manual dari nol",
+                      ].map((item, index) => (
+                        <li
+                          key={index}
+                          style={{
+                            transitionDelay: prefersReducedMotion
+                              ? "0ms"
+                              : `${index * 80}ms`,
+                          }}
+                          className={`flex items-start gap-3 text-sm text-[#444340] leading-relaxed transition-all duration-500 ease-out ${
+                            featuresVisible || prefersReducedMotion
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-4"
+                          }`}
+                        >
+                          <X className="w-4 h-4 text-[#c4503d] shrink-0 mt-1" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
-                {/* Mini Endorsement Note */}
-                <div className="mt-8 pt-6 border-t border-hairline flex items-center gap-3 justify-center md:justify-start text-xs text-muted">
-                  <BadgeCheck className="w-5 h-5 text-primary" />
-                  <span>Menyelaraskan Capaian Pembelajaran resmi Kemendikbudristek</span>
+                {/* Garis Vertikal Tengah Teal (Desktop) */}
+                <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-[#2a7d6e]/30 z-10" />
+
+                {/* Kolom Kanan: Dengan Modulin */}
+                <div className="bg-[#e6f3f0] p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 border-[#e2dbd0]">
+                  <div>
+                    <h3 className="text-xs uppercase tracking-wide font-semibold text-[#2a7d6e] mb-6">
+                      Dengan Modulin
+                    </h3>
+                    <ul className="space-y-5">
+                      {[
+                        "Format resmi BSKAP, siap supervisi pengawas",
+                        "15 menit dari input hingga dokumen siap unduh",
+                        "CP dan TP selaras otomatis berdasarkan fase dan kelas",
+                        "Rubrik asesmen tergenerate sesuai model pembelajaran",
+                      ].map((item, index) => (
+                        <li
+                          key={index}
+                          style={{
+                            transitionDelay: prefersReducedMotion
+                              ? "0ms"
+                              : `${index * 80 + 320}ms`,
+                          }}
+                          className={`flex items-start gap-3 text-sm text-[#1a1917] font-medium leading-relaxed transition-all duration-500 ease-out ${
+                            featuresVisible || prefersReducedMotion
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-4"
+                          }`}
+                        >
+                          <Check className="w-4 h-4 text-[#2a7d6e] shrink-0 mt-1" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
+            </div>
+          </section>
 
-              {/* Hero UI Mockup Card (Official Document Canvas) */}
-              <div className="lg:col-span-5 relative">
-                {/* Background accent soft glow */}
-                <div className="absolute -inset-4 bg-primary-light/50 rounded-2xl filter blur-xl -z-10"></div>
-                <div className="bg-surface-card rounded-xl border border-hairline p-6 shadow-sm relative">
-                  {/* Official Document Header */}
-                  <div className="border-b border-hairline pb-4 mb-4 flex justify-between items-start">
-                    <div>
-                      <span className="text-[11px] tracking-wider text-muted uppercase font-semibold">MODUL AJAR KURIKULUM MERDEKA</span>
-                      <h3 className="font-display text-xl font-semibold text-ink mt-1">Ekosistem & Keanekaragaman Hayati</h3>
-                      <p className="text-xs text-muted">Fase D • Kelas VII SMP • 3 Pertemuan (6 JP)</p>
+          {/* ==================== 6. EDITOR PREVIEW ==================== */}
+          <section className="py-20 md:py-24 bg-[#1c1b18] text-[#faf8f4]">
+            <div className="max-w-6xl mx-auto px-6">
+              <div className="max-w-2xl mx-auto text-center mb-14">
+                <span className="text-xs uppercase tracking-widest text-[#2a7d6e] font-semibold">
+                  Lingkungan Kerja Guru
+                </span>
+                <h2 className="font-display font-semibold text-3xl sm:text-5xl tracking-tight text-[#faf8f4] mt-2 mb-4">
+                  Editor Terstruktur Modul Ajar
+                </h2>
+                <p className="text-sm text-[#a09b93] leading-relaxed">
+                  Sesuaikan urutan kegiatan, lengkapi instruksi diferensiasi, dan
+                  sunting isi dokumen sebelum mengunduh berkas.
+                </p>
+              </div>
+
+              {/* Tiga Panel Studio Interface Mockup */}
+              <div className="bg-[#282623] rounded-xl border border-[#383531] shadow-2xl overflow-hidden">
+                {/* Topbar Editor */}
+                <div className="bg-[#121110] px-4 py-3 border-b border-[#383531] flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#444340]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#444340]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#444340]" />
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary-light text-primary">
-                      Lengkap 100%
+                    <span className="text-[#a09b93] border-l border-[#383531] pl-3 font-mono text-[11px]">
+                      Modul_Ajar_IPA_FaseD_Ekosistem.docx
                     </span>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-[#2a7d6e] bg-[#2a7d6e]/15 px-2 py-0.5 rounded border border-[#2a7d6e]/30">
+                      Tersimpan Otomatis
+                    </span>
+                    <button className="bg-[#2a7d6e] text-white px-3 py-1.5 rounded-md text-xs hover:bg-[#1f6358] flex items-center gap-1.5 font-medium transition-colors cursor-pointer">
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Ekspor Dokumen</span>
+                    </button>
+                  </div>
+                </div>
 
-                  {/* Module Structural Snippet */}
-                  <div className="space-y-3 text-xs text-body">
-                    <div className="p-2.5 rounded bg-canvas border border-hairline-soft">
-                      <span className="font-medium text-[11px] mb-1 text-primary block">Tujuan Pembelajaran (TP)</span>
-                      <p className="leading-relaxed text-[11.5px]">Peserta didik mampu menganalisis interaksi antar komponen biotik dan abiotik melalui investigasi lingkungan sekolah secara kolaboratif.</p>
+                {/* 3 Panel Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-12 min-h-[500px]">
+                  {/* Panel Kiri: Navigator Section */}
+                  <div className="md:col-span-3 bg-[#222120] p-4 border-r border-[#383531] text-xs space-y-1">
+                    <div className="text-[11px] text-[#6b6862] uppercase tracking-wider mb-3 font-semibold">
+                      Struktur Modul Ajar
                     </div>
-                    <div className="p-2.5 rounded bg-canvas border border-hairline-soft">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium text-[11px] text-primary">Model: Problem-Based Learning</span>
-                        <span className="text-[10px] text-muted">Sintaks 5 Langkah</span>
+
+                    <div className="flex items-center justify-between p-2 rounded-md bg-[#282623] text-[#2a7d6e] font-medium">
+                      <span className="flex items-center gap-2">
+                        <Info className="w-4 h-4" /> Identitas Umum
+                      </span>
+                      <Check className="w-3.5 h-3.5" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-md text-[#a09b93]">
+                      <span className="flex items-center gap-2">
+                        <Target className="w-4 h-4" /> Capaian & TP
+                      </span>
+                      <Check className="w-3.5 h-3.5 text-[#2a7d6e]" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-md text-[#a09b93]">
+                      <span className="flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Profil Pelajar Pancasila
+                      </span>
+                      <Check className="w-3.5 h-3.5 text-[#2a7d6e]" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-md bg-[#2a7d6e]/20 text-[#faf8f4] border border-[#2a7d6e]/40 font-medium">
+                      <span className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-[#2a7d6e]" /> Kegiatan
+                        Inti (Sintaks)
+                      </span>
+                      <span className="text-[10px] bg-[#2a7d6e] text-white px-1.5 py-0.5 rounded">
+                        Aktif
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-md text-[#a09b93]">
+                      <span className="flex items-center gap-2">
+                        <BarChart className="w-4 h-4" /> Asesmen & Rubrik
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-md text-[#a09b93]">
+                      <span className="flex items-center gap-2">
+                        <Clipboard className="w-4 h-4" /> LKPD Siswa
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Panel Tengah: Live Generating Document Canvas */}
+                  <div className="md:col-span-6 bg-[#121110] p-6 flex items-center justify-center overflow-y-auto">
+                    <div
+                      className={`bg-white text-[#1a1917] p-8 rounded-lg shadow-md w-full max-w-md text-xs leading-relaxed transition-opacity duration-700 ${
+                        docFadingOut ? "opacity-0" : "opacity-100"
+                      }`}
+                    >
+                      {/* Block 0: Header */}
+                      <div
+                        className={`border-b border-gray-200 pb-3 mb-4 text-center transition-all duration-500 ${
+                          docBlockCount >= 1
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-2 pointer-events-none"
+                        }`}
+                      >
+                        <h4 className="font-display font-semibold text-base uppercase text-black">
+                          MODUL AJAR: KEGIATAN INTI
+                        </h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          Model: Problem-Based Learning (PBL) • 2 JP (80 Menit)
+                        </p>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[11px]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                        <span>Orientasi Masalah → Investigasi Mandiri → Gelar Karya</span>
+
+                      <div className="space-y-4">
+                        {/* Block 1: Tahap 1 Orientasi Masalah */}
+                        <div
+                          className={`transition-all duration-500 ${
+                            docBlockCount >= 2
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-2 pointer-events-none"
+                          }`}
+                        >
+                          <h5 className="font-semibold text-gray-900 text-[11px] mb-1">
+                            Tahap 1: Orientasi Siswa pada Masalah (15 Menit)
+                          </h5>
+                          <p className="text-gray-700 text-[11px] leading-relaxed">
+                            Guru menayangkan video dokumenter singkat fenomena
+                            abrasi pesisir utara Jawa. Peserta didik mencatat 2
+                            pertanyaan pemantik mandiri.
+                          </p>
+                        </div>
+
+                        {/* Block 2: Callout Diferensiasi */}
+                        <div
+                          className={`bg-[#e6f3f0] border-l-2 border-[#2a7d6e] p-2.5 rounded text-[10.5px] transition-all duration-500 ${
+                            docBlockCount >= 3
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-2 pointer-events-none"
+                          }`}
+                        >
+                          <span className="font-semibold text-[#1f6358] block mb-0.5">
+                            Diferensiasi Proses:
+                          </span>
+                          <p className="text-gray-800 leading-tight">
+                            Murid dengan gaya belajar kinestetik mengamati
+                            replika sedimen; murid visual menganalisis peta foto
+                            satelit.
+                          </p>
+                        </div>
+
+                        {/* Block 3: Tahap 2 Mengorganisasi Siswa */}
+                        <div
+                          className={`transition-all duration-500 ${
+                            docBlockCount >= 4
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-2 pointer-events-none"
+                          }`}
+                        >
+                          <h5 className="font-semibold text-gray-900 text-[11px] mb-1">
+                            Tahap 2: Mengorganisasi Siswa untuk Belajar (20
+                            Menit)
+                          </h5>
+                          <p className="text-gray-700 text-[11px] leading-relaxed">
+                            Peserta didik dibagi menjadi 5 kelompok heterogen
+                            untuk merumuskan hipotesis pencegahan abrasi dengan
+                            metode tanggul alami.
+                          </p>
+                        </div>
+
+                        {/* Block 4: Tahap 3 Penyelidikan */}
+                        <div
+                          className={`transition-all duration-500 ${
+                            docBlockCount >= 5
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-2 pointer-events-none"
+                          }`}
+                        >
+                          <h5 className="font-semibold text-gray-900 text-[11px] mb-1">
+                            Tahap 3: Membimbing Penyelidikan Mandiri dan Kelompok
+                            (25 Menit)
+                          </h5>
+                          <p className="text-gray-700 text-[11px] leading-relaxed">
+                            Guru memfasilitasi pengisian LKPD dan memverifikasi
+                            sumber data ilmiah tiap tim.
+                            {/* Blinking cursor at the end of last paragraph */}
+                            {docBlockCount === 5 && !docFadingOut && (
+                              <span className="inline-block w-1.5 h-3.5 bg-[#2a7d6e] ml-1 animate-blink align-middle" />
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Footer Sheet */}
+                      <div className="mt-6 pt-3 border-t border-gray-200 text-[10px] text-gray-400 flex justify-between">
+                        <span>Standar Resmi BSKAP</span>
+                        <span>Halaman 3 dari 6</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Floating Micro Badge 1 */}
-                  <div className="absolute -top-3 -right-3 bg-surface-card border border-hairline px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2 text-xs">
-                    <ShieldCheck className="text-accent-amber w-4 h-4" />
-                    <span className="text-ink font-medium">BSKAP No. 032</span>
-                  </div>
+                  {/* Panel Kanan: Asisten Pedagogik Copilot */}
+                  <div className="md:col-span-3 bg-[#222120] p-4 border-l border-[#383531] flex flex-col justify-between text-xs">
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#383531]">
+                        <Bot className="text-[#2a7d6e] w-4 h-4" />
+                        <span className="font-medium text-[#2a7d6e]">
+                          Asisten Pedagogik Modulin
+                        </span>
+                      </div>
 
-                  {/* Floating Micro Badge 2 */}
-                  <div className="absolute -bottom-3 -left-3 bg-surface-card border border-hairline px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2 text-xs">
-                    <SlidersHorizontal className="text-primary w-4 h-4" />
-                    <span className="text-ink font-medium">Diferensiasi Terbimbing</span>
+                      <div className="bg-[#282623] p-3 rounded-lg border border-[#383531] mb-3 text-xs leading-relaxed text-[#faf8f4]">
+                        <p className="mb-1.5 text-[#2a7d6e] font-medium">
+                          Saran Diferensiasi Konten:
+                        </p>
+                        <p className="text-[11px] text-[#a09b93] leading-relaxed">
+                          Sediakan infografis kosakata dasar sains tentang
+                          rantai makanan bagi siswa yang butuh penguatan konsep.
+                        </p>
+                        <button className="mt-2.5 w-full bg-[#2a7d6e]/20 hover:bg-[#2a7d6e]/30 text-[#2a7d6e] text-[11px] py-1.5 px-2 rounded border border-[#2a7d6e]/40 flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                          <PlusSquare className="w-3.5 h-3.5" />
+                          <span>Sisipkan ke Rencana</span>
+                        </button>
+                      </div>
+
+                      <div className="bg-[#282623] p-3 rounded-lg border border-[#383531] text-xs text-[#faf8f4]">
+                        <p className="mb-1 text-[#d4940a] font-medium">
+                          Cek Keterpaduan HOTS:
+                        </p>
+                        <p className="text-[11px] text-[#a09b93] leading-relaxed">
+                          Pertanyaan nomor 4 pada rubrik sudah mencakup level C4
+                          (Menganalisis) dan C5 (Mengevaluasi).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#383531]">
+                      <div className="relative">
+                        <input
+                          className="w-full bg-[#121110] border border-[#383531] text-xs text-[#faf8f4] placeholder-[#6b6862] rounded-md px-3 py-2 pr-8 focus:outline-none focus:border-[#2a7d6e] transition-colors"
+                          placeholder="Tanyakan saran asesmen..."
+                          type="text"
+                          readOnly
+                        />
+                        <button className="absolute right-2.5 top-2 text-[#2a7d6e] hover:text-white transition-colors">
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ==================== SOCIAL PROOF & STATISTIK SECTION ==================== */}
-        <section className="py-12 bg-surface-soft border-b border-hairline">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div className="p-4">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-primary">12.000+</div>
-                <p className="text-xs md:text-sm text-muted mt-1">Modul Ajar Tersusun</p>
-              </div>
-              <div className="p-4">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-primary">8 Jam</div>
-                <p className="text-xs md:text-sm text-muted mt-1">Waktu Hemat per Pekan</p>
-              </div>
-              <div className="p-4">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-primary">100%</div>
-                <p className="text-xs md:text-sm text-muted mt-1">Sesuai Format BSKAP</p>
-              </div>
-              <div className="p-4">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-primary">6 Model</div>
-                <p className="text-xs md:text-sm text-muted mt-1">Pedagogik Tersedia</p>
-              </div>
-            </div>
-
-            {/* Teacher Quote Banner */}
-            <div className="mt-8 pt-8 border-t border-hairline-soft max-w-3xl mx-auto text-center">
-              <p className="font-display text-lg sm:text-xl italic text-ink font-normal leading-relaxed">
-                "Sintaks pembelajarannya runut dan rubrik asesmennya langsung terpetakan ke tujuan pembelajaran. Format tabelnya rapi sesuai standar supervisi sekolah."
-              </p>
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <span className="text-xs font-semibold text-ink">Dewi Ratnasari, S.Pd.</span>
-                <span className="text-muted text-xs">•</span>
-                <span className="text-xs text-muted">Guru Penggerak, Bandung</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== KEUNGGULAN SECTION (3 Kolom Elegan) ==================== */}
-        <section id="fitur" className="py-20 md:py-28 bg-canvas">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="max-w-2xl mx-auto text-center mb-16">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Standar Resmi</span>
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-ink mt-2 mb-4">
-                Format Kedinasan dengan Struktur Baku.
-              </h2>
-              <p className="text-base text-body leading-relaxed">
-                Disusun sesuai pedoman supervisi pengawas dan kepala sekolah, lengkap dengan rubrik penilaian dan lembar pengesahan.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Kolom 1 */}
-              <div className="bg-surface-card rounded-xl p-8 border border-hairline transition-shadow hover:shadow-md flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 rounded-lg bg-surface-soft border border-hairline-soft flex items-center justify-center text-primary mb-6">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">Penyelarasan CP &amp; TP</h3>
-                  <p className="text-sm text-body leading-relaxed">
-                    Penjabaran Capaian Pembelajaran resmi ke Tujuan Pembelajaran (TP) berdasarkan fase dan kelas peserta didik.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-primary font-medium">
-                  <span>Pedoman BSKAP</span>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
+          {/* ==================== 7. ALUR 3 LANGKAH: STEPPER INTERAKTIF ==================== */}
+          <section className="py-20 md:py-24 bg-[#faf8f4] border-b border-[#e2dbd0]">
+            <div className="max-w-5xl mx-auto px-6">
+              <div className="text-center max-w-xl mx-auto mb-12">
+                <span className="text-xs uppercase tracking-widest text-[#2a7d6e] font-semibold">
+                  Alur Kerja
+                </span>
+                <h2 className="font-display font-semibold text-3xl sm:text-4xl tracking-tight text-[#1a1917] mt-2 mb-3">
+                  Tiga Langkah Pembuatan Modul
+                </h2>
+                <p className="text-sm text-[#444340]">
+                  Tahapan terarah dari penentuan materi hingga dokumen siap
+                  cetak.
+                </p>
               </div>
 
-              {/* Kolom 2 */}
-              <div className="bg-surface-card rounded-xl p-8 border border-hairline transition-shadow hover:shadow-md flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 rounded-lg bg-surface-soft border border-hairline-soft flex items-center justify-center text-primary mb-6">
-                    <Brain className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">6 Model Pembelajaran</h3>
-                  <p className="text-sm text-body leading-relaxed">
-                    Pilihan model PBL, PjBL, Discovery, Inquiry, Cooperative, hingga CIRC dengan sintaks kegiatan per tahap.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-primary font-medium">
-                  <span>Sintaks Terstruktur</span>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </div>
+              {/* Stepper Tabs Bar */}
+              <div className="max-w-3xl mx-auto mb-10">
+                <div className="flex items-center justify-between relative">
+                  {/* Step 1 Tab Button */}
+                  <button
+                    onClick={() => {
+                      setAutoAdvance(false);
+                      setActiveStep(0);
+                    }}
+                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
+                      activeStep === 0
+                        ? "bg-[#2a7d6e] text-white shadow-sm"
+                        : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
+                    }`}
+                  >
+                    <span>01. Isi Identitas Modul</span>
+                  </button>
 
-              {/* Kolom 3 */}
-              <div className="bg-surface-card rounded-xl p-8 border border-hairline transition-shadow hover:shadow-md flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 rounded-lg bg-surface-soft border border-hairline-soft flex items-center justify-center text-primary mb-6">
-                    <Printer className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-display text-2xl font-semibold text-ink mb-3 tracking-tight">Ekspor Word (.docx)</h3>
-                  <p className="text-sm text-body leading-relaxed">
-                    Unduh dokumen dalam format Word (.docx) dan PDF dengan margin dinas resmi (3-2.5-2.5-2.5 cm) dan lembar pengesahan.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-primary font-medium">
-                  <span>Siap Tanda Tangan</span>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+                  {/* Connector Line 1 */}
+                  <div
+                    className={`flex-1 h-0.5 mx-2 transition-colors duration-300 ${
+                      activeStep >= 1 ? "bg-[#2a7d6e]" : "bg-[#e2dbd0]"
+                    }`}
+                  />
 
-        {/* ==================== SECTION PREVIEW EDITOR (Dark Surface Gelap Hangat) ==================== */}
-        <section id="editor-preview" className="py-20 md:py-28 bg-surface-dark text-on-dark">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="max-w-2xl mx-auto text-center mb-16">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Lingkungan Kerja Guru</span>
-              <h2 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight text-on-dark mt-2 mb-4">
-                Editor Terstruktur Modul Ajar
-              </h2>
-              <p className="text-base text-on-dark-soft leading-relaxed">
-                Sesuaikan urutan kegiatan, lengkapi instruksi diferensiasi, dan sunting isi dokumen sebelum mengunduh berkas.
-              </p>
-            </div>
+                  {/* Step 2 Tab Button */}
+                  <button
+                    onClick={() => {
+                      setAutoAdvance(false);
+                      setActiveStep(1);
+                    }}
+                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
+                      activeStep === 1
+                        ? "bg-[#2a7d6e] text-white shadow-sm"
+                        : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
+                    }`}
+                  >
+                    <span>02. Pilih Model Pembelajaran</span>
+                  </button>
 
-            {/* 3-Column Studio Interface Mockup */}
-            <div className="bg-surface-dark-elevated rounded-xl border border-[#2b3532] shadow-2xl overflow-hidden">
-              {/* Editor Title Bar */}
-              <div className="bg-[#121514] px-4 py-3 border-b border-[#2b3532] flex items-center justify-between text-xs">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-neutral-700"></span>
-                    <span className="w-3 h-3 rounded-full bg-neutral-700"></span>
-                    <span className="w-3 h-3 rounded-full bg-neutral-700"></span>
-                  </div>
-                  <span className="text-on-dark-soft border-l border-[#2b3532] pl-3 font-mono">Modul_Ajar_IPA_FaseD_Mitigasi_Bencana.docx</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-primary bg-primary-light/10 px-2 py-0.5 rounded border border-primary/30">Tersimpan Otomatis</span>
-                  <button className="bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs hover:bg-primary-active flex items-center gap-1.5 font-medium">
-                    <Download className="w-4 h-4" /> Ekspor Dokumen
+                  {/* Connector Line 2 */}
+                  <div
+                    className={`flex-1 h-0.5 mx-2 transition-colors duration-300 ${
+                      activeStep >= 2 ? "bg-[#2a7d6e]" : "bg-[#e2dbd0]"
+                    }`}
+                  />
+
+                  {/* Step 3 Tab Button */}
+                  <button
+                    onClick={() => {
+                      setAutoAdvance(false);
+                      setActiveStep(2);
+                    }}
+                    className={`relative z-10 px-4 py-2.5 rounded-[8px] text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
+                      activeStep === 2
+                        ? "bg-[#2a7d6e] text-white shadow-sm"
+                        : "bg-[#f0ebe0] text-[#6b6862] hover:bg-[#e8e1d3]"
+                    }`}
+                  >
+                    <span>03. Unduh Dokumen</span>
                   </button>
                 </div>
               </div>
 
-              {/* 3-Column Content Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-12 min-h-[520px]">
-                {/* Left: Module Section Navigator */}
-                <div className="md:col-span-3 bg-surface-dark-soft p-4 border-r border-[#2b3532] text-xs space-y-1">
-                  <div className="text-[11px] text-muted uppercase tracking-wider mb-2 font-semibold">Struktur Modul Ajar</div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-md bg-surface-dark-elevated text-primary font-medium cursor-pointer">
-                    <span className="flex items-center gap-2">
-                      <Info className="w-4 h-4" /> Identitas Umum
-                    </span>
-                    <Check className="w-3 h-3" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-surface-dark-elevated text-on-dark-soft cursor-pointer">
-                    <span className="flex items-center gap-2">
-                      <Target className="w-4 h-4" /> Capaian & TP
-                    </span>
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-surface-dark-elevated text-on-dark-soft cursor-pointer">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-4 h-4" /> Profil Pelajar Pancasila
-                    </span>
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-md bg-primary/20 text-on-dark border border-primary/40 font-medium cursor-pointer">
-                    <span className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-primary" /> Kegiatan Inti (Sintaks)
-                    </span>
-                    <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded">Aktif</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-surface-dark-elevated text-on-dark-soft cursor-pointer">
-                    <span className="flex items-center gap-2">
-                      <BarChart className="w-4 h-4" /> Asesmen & Rubrik
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-surface-dark-elevated text-on-dark-soft cursor-pointer">
-                    <span className="flex items-center gap-2">
-                      <Clipboard className="w-4 h-4" /> LKPD Siswa
-                    </span>
-                  </div>
-                </div>
+              {/* Panel Konten Berubah Sesuai Langkah Aktif */}
+              <div className="max-w-3xl mx-auto min-h-[320px]">
+                {/* Langkah 1: Isi Identitas Modul Mockup */}
+                {activeStep === 0 && (
+                  <div className="animate-step-enter bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 md:p-8 shadow-sm">
+                    <h4 className="font-display font-semibold text-xl text-[#1a1917] mb-2">
+                      Langkah 1: Identitas dan Topik Pembelajaran
+                    </h4>
+                    <p className="text-xs text-[#6b6862] mb-6">
+                      Sistem menentukan fase dan target capaian secara otomatis
+                      dari jenjang dan kelas.
+                    </p>
 
-                {/* Center: Interactive Document Canvas (Crisp Formal Sheet) */}
-                <div className="md:col-span-6 bg-[#0f1211] p-6 overflow-y-auto">
-                  <div className="bg-white text-[#1a1917] p-8 rounded-lg shadow-md max-w-md mx-auto text-xs leading-relaxed">
-                    {/* Formal Document Sheet */}
-                    <div className="border-b border-gray-200 pb-3 mb-4 text-center">
-                      <h4 className="font-display text-lg font-bold text-black uppercase">MODUL AJAR: KEGIATAN INTI</h4>
-                      <p className="text-[10px] text-gray-500">Model: Problem-Based Learning (PBL) • 2 JP (80 Menit)</p>
-                    </div>
-                    
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <h5 className="font-bold text-gray-800 text-[11px] mb-1">Tahap 1: Orientasi Siswa pada Masalah (15 Menit)</h5>
-                        <p className="text-gray-700 text-[11px]">Guru menayangkan video dokumenter singkat fenomena abrasi pesisir utara Jawa. Peserta didik mencatat 2 pertanyaan pemantik mandiri.</p>
+                        <label className="block text-xs font-medium text-[#444340] mb-1.5">
+                          Mata Pelajaran
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value="Ilmu Pengetahuan Alam (IPA)"
+                          className="w-full bg-white border border-[#e2dbd0] rounded-md px-3.5 py-2 text-xs sm:text-sm text-[#1a1917] font-normal cursor-default"
+                        />
                       </div>
-                      
-                      <div className="bg-emerald-50 border-l-2 border-emerald-600 p-2.5 rounded text-[10.5px]">
-                        <span className="font-bold text-emerald-800 block mb-0.5">Diferensiasi Proses:</span>
-                        <p className="text-emerald-900 leading-tight">Murid dengan gaya belajar kinestetik mengamati replika sedimen; murid visual menganalisis peta foto satelit.</p>
-                      </div>
-                      
                       <div>
-                        <h5 className="font-bold text-gray-800 text-[11px] mb-1">Tahap 2: Mengorganisasi Siswa untuk Belajar (20 Menit)</h5>
-                        <p className="text-gray-700 text-[11px]">Peserta didik dibagi menjadi 5 kelompok heterogen untuk merumuskan hipotesis pencegahan abrasi dengan metode tanggul alami.</p>
+                        <label className="block text-xs font-medium text-[#444340] mb-1.5">
+                          Jenjang dan Kelas
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value="SMP • Kelas VII (Fase D)"
+                          className="w-full bg-white border border-[#e2dbd0] rounded-md px-3.5 py-2 text-xs sm:text-sm text-[#1a1917] font-normal cursor-default"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-medium text-[#444340] mb-1.5">
+                          Topik / Materi Pokok
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value="Interaksi Komponen Ekosistem dan Mitigasi Abrasi"
+                          className="w-full bg-white border border-[#e2dbd0] rounded-md px-3.5 py-2 text-xs sm:text-sm text-[#1a1917] font-normal cursor-default"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-medium text-[#444340] mb-1.5">
+                          Alokasi Waktu
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value="3 Pertemuan (6 JP @ 40 Menit)"
+                          className="w-full bg-white border border-[#e2dbd0] rounded-md px-3.5 py-2 text-xs sm:text-sm text-[#1a1917] font-normal cursor-default"
+                        />
                       </div>
                     </div>
-                    
-                    <div className="mt-6 pt-3 border-t border-gray-200 text-[10px] text-gray-400 flex justify-between">
-                      <span>Modulin Academic Paper Engine</span>
-                      <span>Halaman 3 dari 6</span>
+                  </div>
+                )}
+
+                {/* Langkah 2: Pilih Model Pembelajaran (Grid 2x3 mini) */}
+                {activeStep === 1 && (
+                  <div className="animate-step-enter bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 md:p-8 shadow-sm">
+                    <h4 className="font-display font-semibold text-xl text-[#1a1917] mb-2">
+                      Langkah 2: Pilih Pendekatan Pedagogik
+                    </h4>
+                    <p className="text-xs text-[#6b6862] mb-6">
+                      Sintaks kegiatan belajar langsung disesuaikan dengan
+                      karakteristik model terpilih.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {/* PBL: Selected State */}
+                      <div className="bg-[#e6f3f0] border-2 border-[#2a7d6e] rounded-lg p-3.5 relative">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-semibold text-xs text-[#1a1917]">
+                            PBL
+                          </span>
+                          <span className="text-[10px] bg-[#2a7d6e] text-white px-1.5 py-0.5 rounded font-medium">
+                            Dipilih
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#444340]">
+                          Problem-Based Learning
+                        </p>
+                      </div>
+
+                      {/* Other models in clean mini card */}
+                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
+                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
+                          PjBL
+                        </span>
+                        <p className="text-[11px] text-[#6b6862]">
+                          Project-Based Learning
+                        </p>
+                      </div>
+
+                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
+                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
+                          Discovery
+                        </span>
+                        <p className="text-[11px] text-[#6b6862]">
+                          Discovery Learning
+                        </p>
+                      </div>
+
+                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
+                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
+                          Inquiry
+                        </span>
+                        <p className="text-[11px] text-[#6b6862]">
+                          Inquiry Terbimbing
+                        </p>
+                      </div>
+
+                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
+                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
+                          Diferensiasi
+                        </span>
+                        <p className="text-[11px] text-[#6b6862]">
+                          Pembelajaran Berdiferensiasi
+                        </p>
+                      </div>
+
+                      <div className="bg-white border border-[#e2dbd0] rounded-lg p-3.5">
+                        <span className="font-semibold text-xs text-[#1a1917] block mb-1.5">
+                          Cooperative
+                        </span>
+                        <p className="text-[11px] text-[#6b6862]">
+                          Cooperative Learning
+                        </p>
+                      </div>
                     </div>
                   </div>
+                )}
+
+                {/* Langkah 3: Unduh Dokumen */}
+                {activeStep === 2 && (
+                  <div className="animate-step-enter bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 md:p-8 shadow-sm">
+                    <h4 className="font-display font-semibold text-xl text-[#1a1917] mb-2">
+                      Langkah 3: Pratinjau Dokumen Selesai
+                    </h4>
+                    <p className="text-xs text-[#6b6862] mb-6">
+                      Format kedinasan standar BSKAP No. 032/H/KR/2024 siap
+                      disimpan dan dicetak.
+                    </p>
+
+                    <div className="bg-white border border-[#e2dbd0] rounded-xl p-6 text-center max-w-md mx-auto shadow-sm">
+                      <div className="w-12 h-12 rounded-full bg-[#e6f3f0] text-[#2a7d6e] flex items-center justify-center mx-auto mb-3">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <h5 className="font-semibold text-sm text-[#1a1917] mb-1">
+                        Modul_Ajar_IPA_FaseD.docx
+                      </h5>
+                      <p className="text-xs text-[#6b6862] mb-6">
+                        Margin Resmi Dinas 3-2.5-2.5-2.5 cm • Lengkap dengan
+                        Rubrik
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <button className="w-full sm:w-auto bg-[#2a7d6e] hover:bg-[#1f6358] text-white text-xs font-medium px-5 py-2.5 rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                          <Download className="w-4 h-4" />
+                          <span>Unduh Word (.docx)</span>
+                        </button>
+                        <button className="w-full sm:w-auto border border-[#e2dbd0] bg-[#faf8f4] hover:bg-[#f0ebe0] text-[#1a1917] text-xs font-medium px-5 py-2.5 rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                          <Download className="w-4 h-4 text-[#6b6862]" />
+                          <span>Unduh PDF</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* ==================== 8. MODEL PEMBELAJARAN: PANEL INTERAKTIF ==================== */}
+          <section className="py-20 md:py-24 bg-[#f0ebe0] border-b border-[#e2dbd0]">
+            <div className="max-w-5xl mx-auto px-6">
+              <div className="max-w-2xl mx-auto text-center mb-14">
+                <span className="text-xs uppercase tracking-widest text-[#2a7d6e] font-semibold">
+                  Fondasi Didaktik
+                </span>
+                <h2 className="font-display font-semibold text-3xl sm:text-4xl tracking-tight text-[#1a1917] mt-2 mb-4">
+                  Pilihan Model Pembelajaran Resmi
+                </h2>
+                <p className="text-sm text-[#444340] leading-relaxed">
+                  Pilih salah satu model untuk meninjau sintaks bertahap dan
+                  contoh kegiatan pembelajarannya.
+                </p>
+              </div>
+
+              {/* Layout Dua Kolom: Kiri List Vertikal, Kanan Detail Panel */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Kolom Kiri: 6 Model Pembelajaran List */}
+                <div className="lg:col-span-4 bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-2 space-y-1 shadow-sm">
+                  {MODELS_DATA.map((model) => {
+                    const isActive = model.id === selectedModelId;
+                    return (
+                      <button
+                        key={model.id}
+                        onClick={() => setSelectedModelId(model.id)}
+                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm transition-all duration-150 rounded-r-md cursor-pointer block ${
+                          isActive
+                            ? "bg-[#e6f3f0] border-l-[3px] border-[#2a7d6e] text-[#1a1917] font-medium"
+                            : "bg-transparent text-[#6b6862] hover:bg-[#f0ebe0] border-l-[3px] border-transparent"
+                        }`}
+                      >
+                        {model.name}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Right: Pedagogic Copilot AI Assistant Panel */}
-                <div className="md:col-span-3 bg-surface-dark-soft p-4 border-l border-[#2b3532] flex flex-col justify-between text-xs">
-                  <div>
-                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#2b3532]">
-                      <Bot className="text-primary w-5 h-5" />
-                      <span className="font-medium text-primary">Asisten Pedagogik Modulin</span>
-                    </div>
-                    
-                    <div className="bg-surface-dark-elevated p-3 rounded-lg border border-[#2d3a36] mb-3 text-xs leading-relaxed text-[#dae5e0]">
-                      <p className="mb-2 text-primary font-medium">Saran Diferensiasi Konten:</p>
-                      <p className="text-[11.5px] text-on-dark-soft">Untuk siswa yang belum mencapai target pemahaman prasyarat, sediakan infografis kosakata dasar sains tentang rantai makanan.</p>
-                      <button className="mt-2.5 w-full bg-primary/20 hover:bg-primary/30 text-primary text-[11px] py-1.5 px-2 rounded border border-primary/40 flex items-center justify-center gap-1.5 transition-colors">
-                        <PlusSquare className="w-3.5 h-3.5" /> Sisipkan ke Rencana
-                      </button>
-                    </div>
-                    
-                    <div className="bg-surface-dark-elevated p-3 rounded-lg border border-[#2d3a36] text-xs text-[#dae5e0]">
-                      <p className="mb-1 text-accent-amber font-medium">Cek Keterpaduan HOTS:</p>
-                      <p className="text-[11px] text-on-dark-soft">Pertanyaan nomor 4 pada rubrik sudah mencakup level C4 (Menganalisis) dan C5 (Mengevaluasi).</p>
+                {/* Kolom Kanan: Panel Detail Model yang Dipilih */}
+                <div
+                  key={selectedModel.id}
+                  className="lg:col-span-8 bg-[#faf8f4] border border-[#e2dbd0] rounded-xl p-6 sm:p-8 shadow-sm animate-step-enter"
+                >
+                  <h3 className="font-display font-semibold text-[28px] text-[#1a1917] leading-tight mb-2">
+                    {selectedModel.name}
+                  </h3>
+                  <p className="text-sm text-[#444340] leading-relaxed mb-6">
+                    {selectedModel.description}
+                  </p>
+
+                  {/* Diagram Sintak Horizontal */}
+                  <div className="mb-6">
+                    <span className="text-xs uppercase tracking-wider text-[#6b6862] font-semibold block mb-3">
+                      Alur Sintaks Pembelajaran
+                    </span>
+                    <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1">
+                      {selectedModel.steps.map((step, idx) => (
+                        <React.Fragment key={idx}>
+                          <div className="shrink-0 bg-[#f0ebe0] border border-[#2a7d6e] rounded-md px-3 py-2 text-xs font-medium text-[#1a1917] whitespace-nowrap">
+                            <span className="text-[#2a7d6e] mr-1.5 font-semibold">
+                              {idx + 1}.
+                            </span>
+                            <span>{step}</span>
+                          </div>
+                          {idx < selectedModel.steps.length - 1 && (
+                            <ChevronRight className="w-4 h-4 text-[#2a7d6e] shrink-0" />
+                          )}
+                        </React.Fragment>
+                      ))}
                     </div>
                   </div>
-                  
-                  <div className="pt-4 border-t border-[#2b3532]">
-                    <div className="relative">
-                      <input 
-                        className="w-full bg-[#121514] border border-[#2b3532] text-xs text-on-dark placeholder-muted rounded-md px-3 py-2.5 pr-8 focus:outline-none focus:border-primary transition-colors" 
-                        placeholder="Tanyakan saran asesmen alternatif..." 
-                        type="text"
-                      />
-                      <button className="absolute right-2 top-2.5 text-primary hover:text-white transition-colors">
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
+
+                  {/* Contoh Kegiatan Spesifik dalam Card Krem */}
+                  <div className="bg-[#f0ebe0] border border-[#e2dbd0] rounded-lg p-4">
+                    <span className="text-xs font-semibold text-[#2a7d6e] block mb-1">
+                      Contoh Kegiatan Nyata di Kelas:
+                    </span>
+                    <p className="text-xs text-[#444340] leading-relaxed">
+                      {selectedModel.example}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ==================== ALUR 3 LANGKAH MUDAH ==================== */}
-        <section className="py-20 md:py-28 bg-surface-soft border-b border-hairline">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="text-center max-w-xl mx-auto mb-16">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Alur Kerja</span>
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-ink mt-2 mb-3">
-                Tiga Langkah Pembuatan Modul
+          {/* ==================== 9. CTA PENUTUP ==================== */}
+          <section className="py-20 md:py-24 bg-[#f0ebe0] border-t border-[#e2dbd0]">
+            <div className="max-w-4xl mx-auto px-6 text-center">
+              <h2 className="font-display font-semibold text-3xl sm:text-5xl tracking-tight text-[#1a1917] mb-4">
+                Guru-guru Indonesia tidak punya waktu untuk format yang salah.
               </h2>
-              <p className="text-sm sm:text-base text-body">
-                Tahapan terarah dari penentuan materi hingga dokumen siap cetak.
+              <p className="text-base text-[#444340] max-w-2xl mx-auto leading-relaxed mb-8">
+                Modulin menyusunnya dalam format yang benar, dalam waktu yang
+                jauh lebih singkat.
               </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-              {/* Step 1 */}
-              <div className="bg-surface-card p-6 rounded-xl border border-hairline relative">
-                <span className="font-display text-4xl font-semibold text-primary-disabled/50 block mb-2">01</span>
-                <h3 className="font-display text-xl font-semibold text-ink mb-2">Identitas &amp; Topik</h3>
-                <p className="text-xs sm:text-sm text-body leading-relaxed">
-                  Pilih mata pelajaran, kelas, dan topik materi. Sistem menentukan fase kurikulum yang sesuai.
-                </p>
-              </div>
-              
-              {/* Step 2 */}
-              <div className="bg-surface-card p-6 rounded-xl border border-hairline relative">
-                <span className="font-display text-4xl font-semibold text-primary-disabled/50 block mb-2">02</span>
-                <h3 className="font-display text-xl font-semibold text-ink mb-2">Model Pembelajaran</h3>
-                <p className="text-xs sm:text-sm text-body leading-relaxed">
-                  Pilih model pembelajaran sesuai karakteristik materi dan target capaian siswa.
-                </p>
-              </div>
-              
-              {/* Step 3 */}
-              <div className="bg-surface-card p-6 rounded-xl border border-hairline relative">
-                <span className="font-display text-4xl font-semibold text-primary-disabled/50 block mb-2">03</span>
-                <h3 className="font-display text-xl font-semibold text-ink mb-2">Pratinjau &amp; Unduh</h3>
-                <p className="text-xs sm:text-sm text-body leading-relaxed">
-                  Periksa format tabel resmi, lengkapi lembar pengesahan, lalu unduh berkas Word (.docx).
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* ==================== MODEL PEMBELAJARAN SHOWCASE ==================== */}
-        <section id="model-pembelajaran" className="py-20 md:py-28 bg-canvas">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="max-w-2xl mx-auto text-center mb-16">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Fondasi Didaktik</span>
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-ink mt-2 mb-4">
-                Pilihan Model Pembelajaran Resmi
-              </h2>
-              <p className="text-base text-body leading-relaxed">
-                Setiap modul menyajikan sintaks pembelajaran bertahap sesuai panduan Kurikulum Merdeka.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
-                <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 01</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Problem-Based Learning</h4>
-                <p className="text-xs text-body leading-relaxed">
-                  Lima tahap kegiatan untuk melatih nalar kritis peserta didik memecahkan masalah kontekstual.
-                </p>
+              <div className="flex justify-center mb-6">
+                <Link
+                  href="/create"
+                  className="bg-[#2a7d6e] hover:bg-[#1f6358] text-white text-base font-medium px-8 py-3.5 rounded-[8px] transition-all duration-200 inline-flex items-center justify-center shadow-sm cursor-pointer"
+                >
+                  Mulai Sekarang, Gratis
+                </Link>
               </div>
-              
-              <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
-                <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 02</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Project-Based Learning</h4>
-                <p className="text-xs text-body leading-relaxed">
-                  Penyusunan proyek nyata dari perencanaan, pembuatan prototipe, hingga pameran karya.
-                </p>
-              </div>
-              
-              <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
-                <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 03</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Discovery Learning</h4>
-                <p className="text-xs text-body leading-relaxed">
-                  Eksplorasi terarah bagi peserta didik untuk membuktikan konsep secara langsung.
-                </p>
-              </div>
-              
-              <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
-                <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 04</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Inquiry Terbimbing</h4>
-                <p className="text-xs text-body leading-relaxed">
-                  Investigasi terpandu dari perumusan hipotesis, pengumpulan data, hingga penarikan simpulan.
-                </p>
-              </div>
-              
-              <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
-                <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 05</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Pembelajaran Berdiferensiasi</h4>
-                <p className="text-xs text-body leading-relaxed">
-                  Penyesuaian kegiatan belajar berdasarkan kesiapan, minat, dan profil belajar peserta didik.
-                </p>
-              </div>
-              
-              <div className="p-6 bg-surface-soft rounded-xl border border-hairline-soft">
-                <span className="text-xs uppercase tracking-wider text-primary font-semibold">Model 06</span>
-                <h4 className="font-display text-xl font-semibold text-ink mt-1 mb-2">Cooperative Learning</h4>
-                <p className="text-xs text-body leading-relaxed">
-                  Kerja kelompok terstruktur dengan pembagian peran dan tanggung jawab individu.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* ==================== CALL TO ACTION PENUTUP ==================== */}
-        <section id="harga" className="py-20 md:py-24 bg-surface-card border-t border-hairline">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <span className="text-xs uppercase tracking-widest text-primary font-semibold">Perangkat Pembelajaran</span>
-            <h2 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight text-ink mt-3 mb-6">
-              Siapkan Modul Ajar Resmi Hari Ini
-            </h2>
-            <p className="text-base text-body max-w-2xl mx-auto leading-relaxed mb-8">
-              Susun perangkat ajar berstandar Kurikulum Merdeka dengan format resmi yang siap digunakan.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Tiga Item Kecil Inline */}
+              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-[#6b6862]">
+                <span>Tidak perlu kartu kredit</span>
+                <span>•</span>
+                <span>Login dengan akun Google</span>
+                <span>•</span>
+                <span>Data tersimpan aman di Supabase</span>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        {/* ==================== FOOTER ==================== */}
+        <footer className="bg-[#1c1b18] border-t border-[#282623] py-12 mt-auto">
+          <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            {/* Logo & Copyright */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left">
               <Link
-                href="/create"
-                className="w-full sm:w-auto bg-primary text-on-primary text-base font-medium px-8 py-3.5 rounded-md hover:bg-primary-active transition-all duration-200 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                href="/"
+                className="flex items-center gap-2 mb-2"
               >
-                <span>Mulai Buat Modul Ajar</span>
-                <ArrowRight className="w-5 h-5" />
+                <Image src="/modulin-logo-2.png" alt="Modulin Logo" width={32} height={32} className="rounded-md object-contain" />
+                <span className="font-display font-semibold text-2xl text-[#faf8f4]">Modulin</span>
               </Link>
+              <p className="text-xs text-[#a09b93] max-w-sm leading-relaxed">
+                © 2026 Modulin. Perangkat ajar berstandar Kurikulum Merdeka.
+              </p>
             </div>
-            <p className="text-xs text-muted mt-6">
-              Standar format BSKAP No. 032/H/KR/2024 • Siap ekspor Microsoft Word (.docx)
-            </p>
-          </div>
-        </section>
-      </main>
 
-      {/* ==================== FOOTER ==================== */}
-      <footer className="bg-surface-dark border-t border-surface-dark-elevated py-12 mt-auto">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          {/* Logo & Copyright */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <Link href="/" className="font-display text-2xl font-semibold text-on-dark mb-2">
-              Modulin
-            </Link>
-            <p className="text-xs text-on-dark-soft max-w-sm leading-relaxed">
-              © 2026 Modulin. Perangkat ajar berstandar Kurikulum Merdeka.
-            </p>
+            {/* Footer Navigation Links */}
+            <nav className="flex flex-wrap justify-center gap-6 text-xs text-[#a09b93]">
+              <Link
+                href="#"
+                className="hover:text-[#2a7d6e] transition-colors duration-200"
+              >
+                Tentang Kami
+              </Link>
+              <Link
+                href="#"
+                className="hover:text-[#2a7d6e] transition-colors duration-200"
+              >
+                Panduan Kurikulum Merdeka
+              </Link>
+              <Link
+                href="#"
+                className="hover:text-[#2a7d6e] transition-colors duration-200"
+              >
+                Kebijakan Privasi
+              </Link>
+              <Link
+                href="#"
+                className="hover:text-[#2a7d6e] transition-colors duration-200"
+              >
+                Syarat & Ketentuan
+              </Link>
+              <Link
+                href="#"
+                className="hover:text-[#2a7d6e] transition-colors duration-200"
+              >
+                Bantuan Guru
+              </Link>
+            </nav>
           </div>
-          
-          {/* Footer Navigation Links */}
-          <nav className="flex flex-wrap justify-center gap-6 text-sm text-on-dark-soft">
-            <Link href="#" className="hover:text-primary transition-colors duration-200">Tentang Kami</Link>
-            <Link href="#" className="hover:text-primary transition-colors duration-200">Panduan Kurikulum Merdeka</Link>
-            <Link href="#" className="hover:text-primary transition-colors duration-200">Kebijakan Privasi</Link>
-            <Link href="#" className="hover:text-primary transition-colors duration-200">Syarat & Ketentuan</Link>
-            <Link href="#" className="hover:text-primary transition-colors duration-200">Bantuan Guru</Link>
-          </nav>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }
