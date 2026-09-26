@@ -259,7 +259,7 @@ export default function EditorPage() {
   const currentData = structuredData || DEFAULT_FALLBACK_DATA;
 
   return (
-    <div className="flex-1 bg-surface-dark text-on-dark min-h-[calc(100vh-56px)] pb-[64px] print:bg-white print:text-black print:pb-0">
+    <div className="flex-1 bg-surface-dark text-on-dark min-h-[calc(100vh-64px)] pb-[64px] print:bg-white print:text-black print:pb-0">
       {/* Toast Notification (Hidden on print) */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-fade-in text-[14px] print:hidden">
@@ -269,7 +269,7 @@ export default function EditorPage() {
       )}
 
       {/* Top Action Toolbar (Hidden on print) */}
-      <div className="bg-surface-dark-elevated border-b border-surface-dark-soft h-[60px] flex items-center px-4 sm:px-6 sticky top-[56px] z-40 print:hidden">
+      <div className="bg-surface-dark-elevated border-b border-surface-dark-soft h-[60px] flex items-center px-4 sm:px-6 sticky top-[64px] z-40 print:hidden">
         <div className="max-w-6xl mx-auto w-full flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Link

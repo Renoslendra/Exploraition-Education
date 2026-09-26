@@ -38,11 +38,14 @@ export default function Navbar() {
     return pathname?.startsWith(href);
   };
 
+  const isHeroPage = pathname === "/" || pathname === "/tentang" || pathname === "/fitur";
+  const isSolid = !isHeroPage || isScrolled || isMobileMenuOpen;
+
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 flex items-center ${
-        isScrolled || isMobileMenuOpen
-          ? "h-[64px] bg-[#1a5c50]/95 backdrop-blur-md shadow-lg py-2"
+        isSolid
+          ? "h-[64px] bg-[#1a5c50] shadow-lg py-2"
           : "h-[80px] bg-transparent py-4"
       }`}
     >
