@@ -71,22 +71,9 @@ function parseMarkdownToChunks(filename: string, content: string): KnowledgeChun
 }
 
 /**
- * Mengambil path direktori markdown secara aman baik di local dev maupun serverless
+ * Mengambil path direktori markdown secara aman dan statically-scoped
  */
 function getMarkdownDirectory(): string {
-  const possiblePaths = [
-    path.join(process.cwd(), "markdown"),
-    path.join(process.cwd(), "..", "markdown"),
-    path.resolve(__dirname, "../../../markdown"),
-    path.resolve(__dirname, "../../markdown"),
-  ];
-
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-
   return path.join(process.cwd(), "markdown");
 }
 
@@ -102,12 +89,12 @@ export async function loadKnowledgeBase(): Promise<KnowledgeChunk[]> {
   const markdownDir = getMarkdownDirectory();
 
   try {
-    if (fs.existsSync(markdownDir)) {
-      const files = fs.readdirSync(markdownDir).filter((f) => f.endsWith(".md"));
+    if (fs.existsSync(/*turbopackIgnore: true*/ markdownDir)) {
+      const files = fs.readdirSync(/*turbopackIgnore: true*/ markdownDir).filter((f) => f.endsWith(".md"));
 
       for (const file of files) {
         const fullPath = path.join(markdownDir, file);
-        const fileContent = fs.readFileSync(fullPath, "utf-8");
+        const fileContent = fs.readFileSync(/*turbopackIgnore: true*/ fullPath, "utf-8");
         const docChunks = parseMarkdownToChunks(file, fileContent);
         chunks.push(...docChunks);
       }
