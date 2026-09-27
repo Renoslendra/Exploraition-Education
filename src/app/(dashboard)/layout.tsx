@@ -8,9 +8,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf8f4]">
+    <div className="min-h-screen flex flex-col bg-[#faf8f4] print:bg-white print:min-h-0">
       <Navbar />
-      <main className="flex-1 flex flex-col pt-[64px]">
+      <main className="flex-1 flex flex-col pt-[64px] print:pt-0 print:m-0 print:p-0">
         <DashboardAuthGuard>{children}</DashboardAuthGuard>
       </main>
       <Footer />

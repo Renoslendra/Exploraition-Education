@@ -358,3 +358,43 @@ html {
   color: var(--color-on-dark);
   font-weight: 600;
 }
+
+/* ==========================================================================
+   Print Optimization (@media print)
+   Menyembunyikan navbar web, footer, dan elemen UI saat cetak / simpan ke PDF
+   ========================================================================== */
+@media print {
+  header,
+  footer,
+  nav,
+  .print\:hidden,
+  [data-print-hidden="true"],
+  button {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Memastikan presisi warna kop dan tabel dokumen */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    margin: 1.2cm 1.5cm;
+    size: A4 portrait;
+  }
+}

@@ -270,7 +270,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 flex items-center ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 flex items-center print:hidden ${
           isSolid
             ? "h-[64px] bg-[#1a5c50] shadow-lg py-2"
             : "h-[80px] bg-transparent py-4"
