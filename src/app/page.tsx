@@ -21,8 +21,7 @@ import {
   Send,
   ArrowRight,
   ChevronDown,
-  Menu,
-  Sparkles
+  Menu
 } from "lucide-react";
 
 /* Data Partner & Penyelenggara Event */
@@ -571,18 +570,12 @@ export default function LandingPage() {
           </section>
 
           {/* ==================== EVENT PARTNERS MARQUEE SECTION ==================== */}
-          <section className="bg-[#f5f0e6]/70 border-b border-[#e2dbd0] py-8 sm:py-10 overflow-hidden relative">
-            <div className="max-w-7xl mx-auto px-6 mb-6 text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1a5c50]/10 border border-[#1a5c50]/20 text-[#1a5c50] text-[11px] font-bold uppercase tracking-widest mb-1.5 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-[#d4940a]" />
-                <span>Kolaborasi & Penyelenggara Resmi Event</span>
+          <section className="bg-[#f5f0e6]/70 border-b border-[#e2dbd0] py-5 sm:py-6 overflow-hidden relative">
+            {/* Keterangan Event Badge */}
+            <div className="max-w-7xl mx-auto px-6 mb-4 text-center">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#1a5c50]/10 border border-[#1a5c50]/20 text-[#1a5c50] text-[11px] font-bold uppercase tracking-widest shadow-xs">
+                <span>KOLABORASI & PENYELENGGARA RESMI EVENT</span>
               </div>
-              <h3 className="font-display font-semibold text-xl sm:text-2xl text-[#1a1917] tracking-tight">
-                Didukung oleh Dinas Pendidikan & Ekosistem Teknologi
-              </h3>
-              <p className="text-xs sm:text-[13px] text-[#6b6862] mt-1 max-w-2xl mx-auto">
-                Inisiatif inovasi kecerdasan buatan untuk akselerasi perangkat ajar Kurikulum Merdeka di Indonesia
-              </p>
             </div>
 
             {/* Marquee Scroller with Smooth Edge Fade */}
