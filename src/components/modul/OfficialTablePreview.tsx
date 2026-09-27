@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { StructuredModulAjarData } from "@/types/modul";
-import { Download, Printer, Edit3, Check, Sparkles, BookOpen } from "lucide-react";
+import { Download, Printer, Edit3, Check, Sparkles, BookOpen, Upload, Image as ImageIcon, Trash2 } from "lucide-react";
 
 interface OfficialTablePreviewProps {
   data: StructuredModulAjarData;
@@ -35,6 +35,52 @@ export default function OfficialTablePreview({
   const [nipGuru, setNipGuru] = useState(
     data.lembarPengesahan?.guruPengajar?.nip || "-"
   );
+  const [schoolLogo, setSchoolLogo] = useState<string>(data.schoolLogo || "");
+
+  useEffect(() => {
+    if (data.schoolLogo) {
+      setSchoolLogo(data.schoolLogo);
+    } else {
+      try {
+        const saved = sessionStorage.getItem("modulin_school_logo");
+        if (saved) setSchoolLogo(saved);
+      } catch (e) {}
+    }
+  }, [data.schoolLogo]);
+
+  const handleUploadLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran file logo terlalu besar. Maksimal 5 MB.");
+      e.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        setSchoolLogo(base64);
+        try {
+          sessionStorage.setItem("modulin_school_logo", base64);
+        } catch (err) {}
+        if (onUpdateData) {
+          onUpdateData({ ...data, schoolLogo: base64 });
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setSchoolLogo("");
+    try {
+      sessionStorage.removeItem("modulin_school_logo");
+    } catch (e) {}
+    if (onUpdateData) {
+      onUpdateData({ ...data, schoolLogo: "" });
+    }
+  };
 
   useEffect(() => {
     if (data.lembarPengesahan) {
@@ -94,6 +140,28 @@ export default function OfficialTablePreview({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Tombol Upload / Ganti Logo Sekolah */}
+          <label className="text-[12px] flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface-dark-soft hover:bg-surface-dark text-on-dark transition-colors border border-surface-dark-soft cursor-pointer font-sans">
+            <ImageIcon size={14} className="text-primary" />
+            <span>{schoolLogo ? "Ganti Logo Sekolah" : "Upload Logo Sekolah"}</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onChange={handleUploadLogo}
+              className="hidden"
+            />
+          </label>
+          {schoolLogo && (
+            <button
+              type="button"
+              onClick={handleRemoveLogo}
+              title="Hapus logo sekolah dari sesi"
+              className="text-[12px] flex items-center gap-1 px-2 py-1.5 rounded bg-surface-dark-soft hover:bg-red-950/40 text-red-400 transition-colors border border-surface-dark-soft cursor-pointer font-sans"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setIsEditingSign(!isEditingSign)}
@@ -196,10 +264,34 @@ export default function OfficialTablePreview({
         className="w-full max-w-4xl bg-white text-black p-8 sm:p-12 rounded-lg shadow-xl border border-gray-300 print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-full font-serif"
         style={{ fontFamily: '"Times New Roman", Times, serif' }}
       >
-        {/* Running Header (Mirrors reference PDF) */}
-        <div className="flex justify-between items-center text-[11px] italic text-gray-500 border-b border-gray-200 pb-2 mb-6">
-          <span>Template Modul Ajar</span>
-          <span>{informasiUmum.namaInstitusi || "Kurikulum Merdeka"}</span>
+        {/* Running Header Resmi (Mirrors DOCX Header with Kurikulum Merdeka Banner & Logo Sekolah) */}
+        <div className="flex justify-between items-center border-b border-[#2a7d6e] pb-2 mb-6">
+          <div className="flex items-center gap-3">
+            {schoolLogo ? (
+              <div className="h-11 w-11 bg-white rounded border border-gray-200 flex items-center justify-center p-0.5 overflow-hidden shadow-xs">
+                <img
+                  src={schoolLogo}
+                  alt="Logo Sekolah"
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            ) : null}
+            <div className="text-left leading-tight">
+              <span className="font-bold text-gray-900 text-[13px] block">
+                {informasiUmum.namaInstitusi || "Sekolah Indonesia"}
+              </span>
+              <span className="text-gray-500 text-[11px] italic">
+                Template Modul Ajar Resmi
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <img
+              src="/header-kurikulum-merdeka.png"
+              alt="Kurikulum Merdeka"
+              className="h-10 sm:h-11 w-auto object-contain"
+            />
+          </div>
         </div>
 
         {/* Document Header */}

@@ -296,7 +296,12 @@ export default function EditorPage() {
   const handleDownloadDocx = async () => {
     setIsExportingWord(true);
     try {
-      const payload: StructuredModulAjarData = structuredData || DEFAULT_FALLBACK_DATA;
+      const basePayload: StructuredModulAjarData = structuredData || DEFAULT_FALLBACK_DATA;
+      const schoolLogo = basePayload.schoolLogo || (typeof window !== "undefined" ? sessionStorage.getItem("modulin_school_logo") : null);
+      const payload: StructuredModulAjarData = {
+        ...basePayload,
+        schoolLogo: schoolLogo || undefined,
+      };
 
       const res = await fetch("/api/modules/export/docx", {
         method: "POST",

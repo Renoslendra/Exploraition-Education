@@ -4,7 +4,9 @@ import type { StructuredModulAjarData } from "@/types/modul";
 
 export async function POST(req: NextRequest) {
   try {
-    const data: StructuredModulAjarData = await req.json();
+    const body = await req.json();
+    const data: StructuredModulAjarData = body?.data || body;
+    const schoolLogo = body?.schoolLogo || data?.schoolLogo;
 
     if (!data || !data.informasiUmum) {
       return NextResponse.json(
@@ -13,7 +15,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const docxBuffer = await generateDocxModulAjar(data);
+    const docxBuffer = await generateDocxModulAjar(data, { schoolLogo });
 
     const safeTitle = (data.informasiUmum.mataPelajaran || "Modul")
       .replace(/[^a-zA-Z0-9-_]/g, "_")

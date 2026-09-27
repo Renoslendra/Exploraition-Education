@@ -49,6 +49,7 @@ export interface RubrikPenilaian {
  */
 export interface StructuredModulAjarData {
   id?: string;
+  schoolLogo?: string; // Base64 data URL untuk logo sekolah custom
   informasiUmum: {
     namaPenyusun: string;
     namaInstitusi: string;

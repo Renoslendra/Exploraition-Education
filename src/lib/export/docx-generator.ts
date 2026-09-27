@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {
   Document,
   Packer,
@@ -12,6 +14,8 @@ import {
   HeadingLevel,
   ShadingType,
   Header,
+  ImageRun,
+  VerticalAlign,
 } from "docx";
 import type { StructuredModulAjarData } from "@/types/modul";
 
@@ -126,8 +130,31 @@ function createComponentRow(
  * Generator File DOCX Resmi (Option A - Programmatic Native Engine)
  */
 export async function generateDocxModulAjar(
-  data: StructuredModulAjarData
+  data: StructuredModulAjarData,
+  options?: { schoolLogo?: string }
 ): Promise<Buffer> {
+  // 0. Load Header Images (Kurikulum Merdeka Banner & Custom School Logo)
+  let kmBannerBuffer: Buffer | null = null;
+  try {
+    const bannerPath = path.join(process.cwd(), "public", "header-kurikulum-merdeka.png");
+    if (fs.existsSync(bannerPath)) {
+      kmBannerBuffer = fs.readFileSync(bannerPath);
+    }
+  } catch (err) {
+    console.warn("Gagal memuat banner Kurikulum Merdeka:", err);
+  }
+
+  let schoolLogoBuffer: Buffer | null = null;
+  const rawSchoolLogo = options?.schoolLogo || data.schoolLogo;
+  if (rawSchoolLogo && typeof rawSchoolLogo === "string") {
+    try {
+      const cleanBase64 = rawSchoolLogo.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, "");
+      schoolLogoBuffer = Buffer.from(cleanBase64, "base64");
+    } catch (err) {
+      console.warn("Gagal memproses custom logo sekolah:", err);
+    }
+  }
+
   const {
     informasiUmum,
     tujuanPembelajaran,
@@ -346,22 +373,100 @@ export async function generateDocxModulAjar(
         headers: {
           default: new Header({
             children: [
-              new Paragraph({
-                alignment: AlignmentType.BOTH,
-                children: [
-                  new TextRun({
-                    text: "Template Modul Ajar",
-                    italics: true,
-                    size: 18, // 9pt
-                    color: "777777",
-                    font: FONT_FAMILY,
-                  }),
-                  new TextRun({
-                    text: `\t${informasiUmum.namaInstitusi || "Kurikulum Merdeka"}`,
-                    italics: true,
-                    size: 18,
-                    color: "777777",
-                    font: FONT_FAMILY,
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({
+                    children: [
+                      new TableCell({
+                        width: { size: 55, type: WidthType.PERCENTAGE },
+                        verticalAlign: VerticalAlign.CENTER,
+                        borders: {
+                          top: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE },
+                          bottom: { style: BorderStyle.SINGLE, size: 8, color: "2A7D6E" },
+                        },
+                        margins: { top: 40, bottom: 60, left: 0, right: 40 },
+                        children: schoolLogoBuffer
+                          ? [
+                              new Paragraph({
+                                alignment: AlignmentType.LEFT,
+                                spacing: { before: 0, after: 0 },
+                                children: [
+                                  new ImageRun({
+                                    type: "png",
+                                    data: schoolLogoBuffer,
+                                    transformation: { width: 40, height: 40 },
+                                  }),
+                                  new TextRun({
+                                    text: `  ${informasiUmum.namaInstitusi || "Sekolah Indonesia"}`,
+                                    bold: true,
+                                    size: 17,
+                                    color: "333333",
+                                    font: FONT_FAMILY,
+                                  }),
+                                ],
+                              }),
+                            ]
+                          : [
+                              new Paragraph({
+                                alignment: AlignmentType.LEFT,
+                                spacing: { before: 0, after: 0 },
+                                children: [
+                                  new TextRun({
+                                    text: "Template Modul Ajar",
+                                    italics: true,
+                                    size: 17,
+                                    color: "777777",
+                                    font: FONT_FAMILY,
+                                  }),
+                                  new TextRun({
+                                    text: ` — ${informasiUmum.namaInstitusi || "Kurikulum Merdeka"}`,
+                                    italics: true,
+                                    size: 17,
+                                    color: "444444",
+                                    font: FONT_FAMILY,
+                                  }),
+                                ],
+                              }),
+                            ],
+                      }),
+                      new TableCell({
+                        width: { size: 45, type: WidthType.PERCENTAGE },
+                        verticalAlign: VerticalAlign.CENTER,
+                        borders: {
+                          top: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE },
+                          bottom: { style: BorderStyle.SINGLE, size: 8, color: "2A7D6E" },
+                        },
+                        margins: { top: 40, bottom: 60, left: 40, right: 0 },
+                        children: [
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            spacing: { before: 0, after: 0 },
+                            children: kmBannerBuffer
+                              ? [
+                                  new ImageRun({
+                                    type: "png",
+                                    data: kmBannerBuffer,
+                                    transformation: { width: 170, height: 42 },
+                                  }),
+                                ]
+                              : [
+                                  new TextRun({
+                                    text: "KURIKULUM MERDEKA",
+                                    bold: true,
+                                    size: 18,
+                                    color: COLOR_PRIMARY_HEX,
+                                    font: FONT_FAMILY,
+                                  }),
+                                ],
+                          }),
+                        ],
+                      }),
+                    ],
                   }),
                 ],
               }),

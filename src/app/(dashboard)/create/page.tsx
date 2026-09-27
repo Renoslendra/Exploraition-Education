@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, BookOpen, Check, GitCompareArrows, Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, GitCompareArrows, Info, Upload, Image as ImageIcon } from "lucide-react";
 
 /* =========================================
  * 1. CONSTANTS & TYPES
@@ -67,6 +67,7 @@ const MODELS = [
 type IdentityData = {
   namaGuru: string;
   sekolah: string;
+  schoolLogo?: string;
   mapel: string;
   jenjang: string;
   kelas: string;
@@ -79,6 +80,7 @@ type IdentityData = {
 const INITIAL_IDENTITY: IdentityData = {
   namaGuru: "",
   sekolah: "",
+  schoolLogo: "",
   mapel: "",
   jenjang: "SD",
   kelas: "1",
@@ -285,6 +287,17 @@ function IdentityForm({
   const modelName = MODELS.find((m) => m.id === selectedModel)?.name || "Model";
   const isPaud = identityData.jenjang === "PAUD/TK";
 
+  useEffect(() => {
+    try {
+      const savedLogo = sessionStorage.getItem("modulin_school_logo");
+      if (savedLogo && !identityData.schoolLogo) {
+        setIdentityData({ ...identityData, schoolLogo: savedLogo });
+      }
+    } catch (e) {
+      console.warn("Gagal memuat logo sekolah dari session:", e);
+    }
+  }, []);
+
   const getFase = (kls: string): string => {
     if (!kls) return "Fase Fondasi";
     const k = parseInt(kls);
@@ -380,6 +393,90 @@ function IdentityForm({
                 className={inputClass}
               />
             </div>
+          </div>
+
+          {/* Logo Sekolah (Opsional, Maks 5 MB, Tersimpan di Session) */}
+          <div className="bg-white/80 border border-[#e2dbd0] rounded-xl p-4 transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[14px] font-medium text-[#1a1917] flex items-center gap-1.5">
+                <ImageIcon size={16} className="text-[#2a7d6e]" />
+                <span>Logo Sekolah (Kop Dokumen &amp; DOCX)</span>
+              </label>
+              <span className="text-[11px] text-[#78756e] font-sans">Opsional • Maks 5 MB</span>
+            </div>
+
+            {identityData.schoolLogo ? (
+              <div className="flex items-center justify-between gap-4 p-3 bg-[#f5f2eb] rounded-lg border border-[#e2dbd0]">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 bg-white rounded-md border border-[#ddd6ca] flex items-center justify-center p-1 overflow-hidden">
+                    <img
+                      src={identityData.schoolLogo}
+                      alt="Logo Sekolah"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#1a1917]">Logo Sekolah Terpasang</p>
+                    <p className="text-[11px] text-[#78756e]">Tersimpan di sesi &amp; otomatis tercetak di header DOCX</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange("schoolLogo", "");
+                    try {
+                      sessionStorage.removeItem("modulin_school_logo");
+                    } catch (e) {}
+                  }}
+                  className="px-2.5 py-1 text-[12px] text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors font-medium cursor-pointer"
+                >
+                  Hapus
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  id="schoolLogoInput"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    // Validasi ukuran max 5 MB (5 * 1024 * 1024 bytes)
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert("Ukuran file logo terlalu besar. Maksimal 5 MB.");
+                      e.target.value = "";
+                      return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result as string;
+                      if (base64) {
+                        handleChange("schoolLogo", base64);
+                        try {
+                          sessionStorage.setItem("modulin_school_logo", base64);
+                        } catch (err) {
+                          console.warn("Gagal menyimpan logo ke sessionStorage:", err);
+                        }
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="schoolLogoInput"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-[#2a7d6e]/50 hover:border-[#2a7d6e] bg-[#f8f6f0] hover:bg-[#eef5f3] rounded-lg cursor-pointer transition-colors text-center"
+                >
+                  <Upload size={16} className="text-[#2a7d6e]" />
+                  <span className="text-[13px] text-[#2a7d6e] font-medium">
+                    Unggah Logo Sekolah (PNG / JPG / WEBP)
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Mata Pelajaran */}
@@ -586,6 +683,11 @@ function Generate({
         }
         if (!result.structuredData.informasiUmum.mataPelajaran) {
           result.structuredData.informasiUmum.mataPelajaran = identityData.mapel;
+        }
+
+        const sessionLogo = identityData.schoolLogo || (typeof window !== "undefined" ? sessionStorage.getItem("modulin_school_logo") : null);
+        if (sessionLogo) {
+          result.structuredData.schoolLogo = sessionLogo;
         }
 
         localStorage.setItem(

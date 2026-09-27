@@ -116,10 +116,11 @@ export default function DashboardPage() {
   const handleDownloadDocx = async (data: StructuredModulAjarData) => {
     setIsExporting(true);
     try {
+      const schoolLogo = data.schoolLogo || (typeof window !== "undefined" ? sessionStorage.getItem("modulin_school_logo") : null);
       const res = await fetch("/api/modules/export/docx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, schoolLogo: schoolLogo || undefined }),
       });
 
       if (!res.ok) {
@@ -287,7 +288,7 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-2 bg-[#2a7d6e] text-white rounded-md px-5 h-[40px] text-[14px] font-medium hover:bg-[#1f6358] transition-colors shadow-sm self-start"
             >
               <Plus size={16} />
-              <span>Buat Modul Baru</span>
+              <span>Modul Baru</span>
             </Link>
           </div>
 
@@ -518,7 +519,7 @@ export default function DashboardPage() {
                 className="flex items-center justify-center gap-2 w-full h-[48px] bg-[#2a7d6e] text-white rounded-md hover:bg-[#1f6358] transition-colors"
               >
                 <Plus size={16} />
-                <span className="text-[14px] font-medium">Buat Modul Baru</span>
+                <span className="text-[14px] font-medium">Modul Baru</span>
               </Link>
 
               {activeModule && !isExported && (
