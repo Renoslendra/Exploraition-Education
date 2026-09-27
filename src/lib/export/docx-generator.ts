@@ -144,13 +144,13 @@ export async function generateDocxModulAjar(
 
   // 1. Baris Informasi Umum
   const infoParas: Paragraph[] = [
-    createPara(`Nama Penyusun: ${informasiUmum.namaPenyusun}`),
-    createPara(`Nama Institusi: ${informasiUmum.namaInstitusi}`),
+    createPara(`Nama Penyusun: ${informasiUmum.namaPenyusun || "-"}`),
+    createPara(`Nama Institusi: ${informasiUmum.namaInstitusi || "-"}`),
     createPara(`Mata Pelajaran: ${informasiUmum.mataPelajaran || "-"}`),
-    createPara(`Tahun Penyusunan: ${informasiUmum.tahunPenyusunan}`),
-    createPara(`Jenjang Sekolah: ${informasiUmum.jenjangSekolah}`),
-    createPara(`Fase / Kelas: Fase ${informasiUmum.fase} / Kelas ${informasiUmum.kelas}`),
-    createPara(`Alokasi Waktu: ${informasiUmum.alokasiWaktu}`),
+    createPara(`Tahun Penyusunan: ${informasiUmum.tahunPenyusunan || "2026"}`),
+    createPara(`Jenjang Sekolah: ${informasiUmum.jenjangSekolah || "-"}`),
+    createPara(`Fase / Kelas: Fase ${informasiUmum.fase || "-"} / Kelas ${informasiUmum.kelas || "-"}`),
+    createPara(`Alokasi Waktu: ${informasiUmum.alokasiWaktu || "-"}`),
   ];
 
   // 2. Baris Tujuan Pembelajaran
@@ -376,7 +376,7 @@ export async function generateDocxModulAjar(
             spacing: { before: 0, after: 100 },
             children: [
               new TextRun({
-                text: `MODUL AJAR ${informasiUmum.mataPelajaran ? informasiUmum.mataPelajaran.toUpperCase() + " " : ""}${informasiUmum.jenjangSekolah.toUpperCase()} ${informasiUmum.kelas ? "KELAS " + informasiUmum.kelas.toUpperCase() : ""}`,
+                text: `MODUL AJAR ${informasiUmum.mataPelajaran ? informasiUmum.mataPelajaran.toUpperCase() + " " : ""}${informasiUmum.jenjangSekolah ? informasiUmum.jenjangSekolah.toUpperCase() + " " : ""}${informasiUmum.kelas ? "KELAS " + informasiUmum.kelas.toUpperCase() : ""}`.trim(),
                 bold: true,
                 font: FONT_FAMILY,
                 size: 28, // 14pt

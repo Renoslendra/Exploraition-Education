@@ -26,6 +26,7 @@ function convertToSections(data: StructuredModulAjarData): ModulSection[] {
         <div class="space-y-2">
           <p><strong>Nama Penyusun:</strong> ${data.informasiUmum.namaPenyusun}</p>
           <p><strong>Nama Institusi:</strong> ${data.informasiUmum.namaInstitusi}</p>
+          <p><strong>Mata Pelajaran:</strong> ${data.informasiUmum.mataPelajaran || "-"}</p>
           <p><strong>Tahun Penyusunan:</strong> ${data.informasiUmum.tahunPenyusunan}</p>
           <p><strong>Jenjang Sekolah:</strong> ${data.informasiUmum.jenjangSekolah}</p>
           <p><strong>Fase / Kelas:</strong> Fase ${data.informasiUmum.fase} / Kelas ${data.informasiUmum.kelas}</p>
@@ -248,7 +249,7 @@ JANGAN gunakan markdown code block (\`\`\`json). Kembalikan HANYA teks JSON vali
 
 SKEMA JSON WAJIB:
 {
-  "informasiUmum": { "namaPenyusun": "", "namaInstitusi": "", "tahunPenyusunan": "2026", "jenjangSekolah": "", "fase": "", "kelas": "", "alokasiWaktu": "" },
+  "informasiUmum": { "namaPenyusun": "${identitas.namaGuru || "Guru Pengajar"}", "namaInstitusi": "${identitas.instansi || "Sekolah Indonesia"}", "mataPelajaran": "${identitas.mataPelajaran || ""}", "tahunPenyusunan": "2026", "jenjangSekolah": "${identitas.jenjang || "SMP"}", "fase": "${identitas.fase || "D"}", "kelas": "${identitas.kelas || "7"}", "alokasiWaktu": "${identitas.alokasiWaktu || "2 x 45 menit"}" },
   "tujuanPembelajaran": { "faseCP": "", "elemenCP": [], "tujuan": [], "pertanyaanPemantik": [], "lingkunganBelajar": "" },
   "profilPelajarPancasila": [],
   "materiAlatBahan": { "materiUtama": "", "sumberBelajar": [], "fasilitas": [] },
@@ -324,6 +325,27 @@ Buat modul ajar lengkap berkualitas tinggi, faktual, dan kontekstual untuk kelas
         { status: 500 }
       );
     }
+
+    // Pastikan informasiUmum selalu memiliki data identitas input yang valid dan lengkap
+    if (!structuredData.informasiUmum) {
+      structuredData.informasiUmum = {} as any;
+    }
+    structuredData.informasiUmum.mataPelajaran =
+      structuredData.informasiUmum.mataPelajaran || identitas.mataPelajaran || "Mata Pelajaran";
+    structuredData.informasiUmum.namaPenyusun =
+      structuredData.informasiUmum.namaPenyusun || identitas.namaGuru || "Guru Pengajar";
+    structuredData.informasiUmum.namaInstitusi =
+      structuredData.informasiUmum.namaInstitusi || identitas.instansi || "Sekolah Indonesia";
+    structuredData.informasiUmum.tahunPenyusunan =
+      structuredData.informasiUmum.tahunPenyusunan || identitas.tahunAjaran?.split("/")[0] || "2026";
+    structuredData.informasiUmum.jenjangSekolah =
+      structuredData.informasiUmum.jenjangSekolah || identitas.jenjang || "SMP";
+    structuredData.informasiUmum.fase =
+      structuredData.informasiUmum.fase || identitas.fase || "D";
+    structuredData.informasiUmum.kelas =
+      structuredData.informasiUmum.kelas || identitas.kelas || "7";
+    structuredData.informasiUmum.alokasiWaktu =
+      structuredData.informasiUmum.alokasiWaktu || identitas.alokasiWaktu || "2 x 45 menit";
 
     const sections = convertToSections(structuredData);
     const durasiMs = Date.now() - startTime;

@@ -581,6 +581,13 @@ function Generate({
           throw new Error(result.error || "Gagal menyusun modul ajar.");
         }
 
+        if (!result.structuredData.informasiUmum) {
+          result.structuredData.informasiUmum = {} as any;
+        }
+        if (!result.structuredData.informasiUmum.mataPelajaran) {
+          result.structuredData.informasiUmum.mataPelajaran = identityData.mapel;
+        }
+
         localStorage.setItem(
           "modulin_active_structured",
           JSON.stringify(result.structuredData)
