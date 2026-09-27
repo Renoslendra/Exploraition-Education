@@ -19,10 +19,14 @@ import {
   ChevronDown,
   User,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { supabase } from "@/lib/supabase/client";
 import type { StructuredModulAjarData } from "@/types/modul";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const [userName, setUserName] = useState<string>("");
 
   // State
   const [activeModule, setActiveModule] = useState<StructuredModulAjarData | null>(null);
@@ -69,6 +73,40 @@ export default function DashboardPage() {
     }
     setMounted(true);
   }, []);
+
+  // Sinkronisasi nama user untuk sapaan dashboard
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const savedName = localStorage.getItem("modulin_user_name");
+      if (session?.user?.name) {
+        setUserName(savedName || session.user.name);
+        return;
+      }
+      if (savedName) {
+        setUserName(savedName);
+        return;
+      }
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          const name = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "";
+          if (name) {
+            setUserName(name);
+            return;
+          }
+        }
+      } catch {}
+    };
+
+    fetchUserName();
+
+    const handleUpdate = () => {
+      const savedName = localStorage.getItem("modulin_user_name");
+      if (savedName) setUserName(savedName);
+    };
+    window.addEventListener("modulin_user_updated", handleUpdate);
+    return () => window.removeEventListener("modulin_user_updated", handleUpdate);
+  }, [session]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -238,7 +276,7 @@ export default function DashboardPage() {
                 {todayDate}
               </div>
               <h1 className="font-display text-[36px] font-semibold text-[#1a1917] mb-1">
-                Selamat datang kembali.
+                Selamat datang kembali{userName ? `, ${userName}` : ""}.
               </h1>
               <p className="text-[14px] font-inter text-[#444340]">
                 Lanjutkan menyusun modul ajar atau mulai yang baru.

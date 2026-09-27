@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { supabase } from "@/lib/supabase/client";
 import {
   BookOpen,
   BadgeCheck,
@@ -176,6 +178,9 @@ const MODELS_DATA: ModelDetail[] = [
 ];
 
 export default function LandingPage() {
+  const { data: session } = useSession();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   /* 1. Splash Screen States */
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
@@ -237,6 +242,32 @@ export default function LandingPage() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  /* Auth State Check */
+  useEffect(() => {
+    if (session?.user) {
+      setIsLoggedIn(true);
+      return;
+    }
+    const loggedInFlag = localStorage.getItem("modulin_logged_in");
+    const savedName = localStorage.getItem("modulin_user_name");
+    if (loggedInFlag === "true" && savedName) {
+      setIsLoggedIn(true);
+      return;
+    }
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (data?.user) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+      });
+  }, [session]);
 
   /* Initialize reduced motion and Splash Screen Timer */
   useEffect(() => {
@@ -479,19 +510,19 @@ export default function LandingPage() {
                 Fitur
                 <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
               </Link>
-              <Link href="/editor" className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
+              <Link href={isLoggedIn ? "/editor" : "/login?callbackUrl=/editor"} className="relative text-white/90 hover:text-white text-[15px] font-medium drop-shadow-md transition-colors group">
                 Template
                 <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full transition-transform origin-left scale-x-0 group-hover:scale-x-100 duration-300"></span>
               </Link>
             </nav>
 
-            {/* Kanan: Tombol Masuk Desktop & Hamburger */}
+            {/* Kanan: Tombol Masuk / Dashboard Desktop & Hamburger */}
             <div className="flex items-center gap-3">
               <Link
-                href="/login"
+                href={isLoggedIn ? "/dashboard" : "/login"}
                 className="hidden md:inline-flex h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full px-6 hover:bg-[#dc2626] transition-all duration-200 items-center justify-center cursor-pointer shadow-lg"
               >
-                Masuk
+                {isLoggedIn ? "Dashboard" : "Masuk"}
               </Link>
               
               {/* Hamburger Mobile */}
@@ -511,9 +542,9 @@ export default function LandingPage() {
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-white text-[16px] font-bold py-2 border-b border-white/10">Beranda</Link>
               <Link href="/tentang" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Tentang</Link>
               <Link href="/fitur" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Fitur</Link>
-              <Link href="/editor" onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Template</Link>
-              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full mt-2 flex items-center justify-center">
-                Masuk
+              <Link href={isLoggedIn ? "/editor" : "/login?callbackUrl=/editor"} onClick={() => setIsMobileMenuOpen(false)} className="text-white/90 hover:text-white text-[16px] font-medium py-2 border-b border-white/10">Template</Link>
+              <Link href={isLoggedIn ? "/dashboard" : "/login"} onClick={() => setIsMobileMenuOpen(false)} className="h-10 bg-[#ef4444] text-white text-sm font-bold rounded-full mt-2 flex items-center justify-center">
+                {isLoggedIn ? "Dashboard" : "Masuk"}
               </Link>
             </div>
           )}
@@ -549,7 +580,7 @@ export default function LandingPage() {
                 {/* CTA Buttons - Premium Editorial Style */}
                 <div className="flex flex-col sm:flex-row items-center gap-5 mt-2">
                   <Link
-                    href="/create"
+                    href={isLoggedIn ? "/create" : "/login?callbackUrl=/create"}
                     className="group relative w-full sm:w-auto h-14 bg-white text-[#1a5c50] text-[15px] font-bold px-9 rounded-full flex items-center justify-center gap-2.5 overflow-hidden transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.15)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.2)] hover:-translate-y-1"
                   >
                     <span className="relative z-10">Mulai Buat Modul</span>
@@ -557,7 +588,7 @@ export default function LandingPage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </Link>
                   <Link
-                    href="/editor"
+                    href={isLoggedIn ? "/editor" : "/login?callbackUrl=/editor"}
                     className="group w-full sm:w-auto h-14 border border-white/30 bg-white/5 backdrop-blur-md hover:bg-white/15 text-white text-[15px] font-semibold px-9 rounded-full flex items-center justify-center gap-2.5 transition-all duration-300 hover:-translate-y-1"
                   >
                     <FileText className="w-[18px] h-[18px] text-white/70 group-hover:text-white transition-colors duration-300" />
@@ -1288,7 +1319,7 @@ export default function LandingPage() {
 
               <div className="flex justify-center mb-8">
                 <Link
-                  href="/create"
+                  href={isLoggedIn ? "/create" : "/login?callbackUrl=/create"}
                   className="bg-white hover:bg-gray-100 text-[#1a5c50] text-[15px] font-bold px-10 py-4 rounded-full transition-all duration-300 inline-flex items-center justify-center shadow-[0_8px_30px_rgba(255,255,255,0.2)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.3)] hover:-translate-y-1 cursor-pointer"
                 >
                   Mulai Sekarang, Gratis
@@ -1318,8 +1349,8 @@ export default function LandingPage() {
               <div>
                 <h4 className="text-white font-semibold text-[13px] uppercase tracking-widest mb-6">Produk</h4>
                 <ul className="space-y-4">
-                  <li><Link href="/create" className="text-gray-400 hover:text-white text-[14px] transition-colors">Generator Modul Ajar</Link></li>
-                  <li><Link href="/editor" className="text-gray-400 hover:text-white text-[14px] transition-colors">Template Resmi BSKAP</Link></li>
+                  <li><Link href={isLoggedIn ? "/create" : "/login?callbackUrl=/create"} className="text-gray-400 hover:text-white text-[14px] transition-colors">Generator Modul Ajar</Link></li>
+                  <li><Link href={isLoggedIn ? "/editor" : "/login?callbackUrl=/editor"} className="text-gray-400 hover:text-white text-[14px] transition-colors">Template Resmi BSKAP</Link></li>
                   <li><Link href="/fitur" className="text-gray-400 hover:text-white text-[14px] transition-colors">Asisten Pedagogik</Link></li>
                 </ul>
               </div>

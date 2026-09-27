@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { ChevronDown, Sparkles, LayoutList, PenSquare, Download, Layers, CheckCircle2, ArrowRight, FileCheck, Bot, ChevronDown as ScrollArrow } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { supabase } from "@/lib/supabase/client";
 
 const FITUR_FAQS = [
   {
@@ -78,8 +80,31 @@ const FITUR_UTAMA = [
 ];
 
 export default function FiturPage() {
+  const { data: session } = useSession();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedFitur, setSelectedFitur] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  useEffect(() => {
+    if (session?.user) {
+      setIsLoggedIn(true);
+      return;
+    }
+    const loggedInFlag = localStorage.getItem("modulin_logged_in");
+    const savedName = localStorage.getItem("modulin_user_name");
+    if (loggedInFlag === "true" && savedName) {
+      setIsLoggedIn(true);
+      return;
+    }
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        setIsLoggedIn(!!data?.user);
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+      });
+  }, [session]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8f4] text-[#1a1917] selection:bg-[#e6f3f0] selection:text-[#1f6358]">
@@ -217,7 +242,7 @@ export default function FiturPage() {
 
               <div className="mt-6 text-center">
                 <Link
-                  href="/create"
+                  href={isLoggedIn ? "/create" : "/login?callbackUrl=/create"}
                   className="inline-flex items-center gap-2 bg-[#2a7d6e] hover:bg-[#1f6358] text-white text-xs font-bold px-6 py-3 rounded-lg transition-colors shadow-sm"
                 >
                   <span>Coba Fitur Ini Sekarang</span>
@@ -288,7 +313,7 @@ export default function FiturPage() {
                 Hemat waktu hingga 90% dalam menyusun dokumen pembelajaran Kurikulum Merdeka.
               </p>
               <Link
-                href="/create"
+                href={isLoggedIn ? "/create" : "/login?callbackUrl=/create"}
                 className="h-13 px-9 bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold text-sm rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-all cursor-pointer"
               >
                 Mulai Sekarang — Gratis

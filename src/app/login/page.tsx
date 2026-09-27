@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, User, Check } from "lucide-react";
@@ -163,12 +164,13 @@ interface FormPanelProps {
   contentVisible: boolean;
 }
 
-
-
 function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("guru.demo@modulin.id");
-  const [password, setPassword] = useState("PasswordModulin2026!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -182,21 +184,21 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
     try {
       const client = getSupabaseClient();
       if (mode === "masuk") {
-        try {
-          const client = getSupabaseClient();
-          const { data, error } = await client.auth.signInWithPassword({ email, password });
-          if (error) console.warn("Supabase auth note:", error.message);
-          const isDemo = email.includes("demo");
-          const userName = data?.user?.user_metadata?.full_name || (isDemo ? "Guru Demo Modulin" : email.split("@")[0]);
-          localStorage.setItem("modulin_user_name", userName);
-          localStorage.setItem("modulin_user_role", isDemo ? "Pendidik (Akun Demo)" : "Guru Pengajar");
-        } catch (e) {
-          console.warn("Using demo login mode:", e);
-          localStorage.setItem("modulin_user_name", "Guru Demo Modulin");
-          localStorage.setItem("modulin_user_role", "Pendidik (Akun Demo)");
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) {
+          throw new Error(
+            error.message.includes("Invalid login credentials")
+              ? "Email atau kata sandi tidak cocok."
+              : error.message
+          );
         }
+        const isDemo = email.includes("demo");
+        const userName = data?.user?.user_metadata?.full_name || (isDemo ? "Guru Demo Modulin" : email.split("@")[0]);
+        localStorage.setItem("modulin_user_name", userName);
+        localStorage.setItem("modulin_user_email", email);
+        localStorage.setItem("modulin_user_role", isDemo ? "Pendidik (Akun Demo)" : "Guru Pengajar");
         localStorage.setItem("modulin_logged_in", "true");
-        window.location.href = "/dashboard";
+        window.location.href = callbackUrl;
       } else {
         const { error } = await client.auth.signUp({
           email,
@@ -204,7 +206,7 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
           options: { data: { full_name: name } },
         });
         if (error) throw new Error(error.message);
-        setAuthError("Cek email kamu untuk konfirmasi pendaftaran.");
+        setAuthError("Pendaftaran berhasil. Silakan cek email kamu atau masuk langsung.");
       }
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Terjadi kesalahan. Coba lagi.");
@@ -218,11 +220,19 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
     setAuthError(null);
     try {
       localStorage.setItem("modulin_logged_in", "true");
-      await signIn("google", { callbackUrl: "/dashboard" });
+      await signIn("google", { callbackUrl });
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Gagal masuk dengan Google. Coba lagi.");
       setGoogleLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    localStorage.setItem("modulin_user_name", "Guru Demo Modulin");
+    localStorage.setItem("modulin_user_email", "guru.demo@modulin.id");
+    localStorage.setItem("modulin_user_role", "Pendidik (Akun Demo)");
+    localStorage.setItem("modulin_logged_in", "true");
+    window.location.href = callbackUrl;
   };
 
   const isMasuk = mode === "masuk";
@@ -414,6 +424,17 @@ function FormPanel({ mode, onToggle, contentVisible }: FormPanelProps) {
                   </>
                 )}
               </button>
+
+              {/* Tombol Akun Demo Eksplisit untuk Pengujian Juri */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  className="w-full h-11 bg-[#1a5c50]/5 hover:bg-[#1a5c50]/10 border border-[#1a5c50]/20 rounded-[12px] text-[13px] font-semibold text-[#1a5c50] flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
+                >
+                  <span>Gunakan Akun Demo Pengujian (Juri)</span>
+                </button>
+              </div>
             </>
           )}
 
@@ -514,7 +535,9 @@ export default function LoginPage() {
               transition: ENTRANCE,
             }}
           >
-            <FormPanel mode={mode} onToggle={handleToggle} contentVisible={contentVisible} />
+            <Suspense fallback={<div className="h-full flex items-center justify-center text-sm text-[#908c84]">Memuat...</div>}>
+              <FormPanel mode={mode} onToggle={handleToggle} contentVisible={contentVisible} />
+            </Suspense>
           </div>
         </div>
 
@@ -527,7 +550,9 @@ export default function LoginPage() {
             transition: ENTRANCE,
           }}
         >
-          <FormPanel mode={mode} onToggle={handleToggle} contentVisible={contentVisible} />
+          <Suspense fallback={<div className="h-full flex items-center justify-center text-sm text-[#908c84]">Memuat...</div>}>
+            <FormPanel mode={mode} onToggle={handleToggle} contentVisible={contentVisible} />
+          </Suspense>
         </div>
       </div>
     </>

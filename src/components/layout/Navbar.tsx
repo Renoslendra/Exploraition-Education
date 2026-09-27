@@ -39,7 +39,7 @@ export default function Navbar() {
   // State untuk profile pengguna
   const [userProfile, setUserProfile] = useState<UserProfileState>({
     name: "Guru Pengajar",
-    email: "guru.demo@modulin.id",
+    email: "",
     image: null,
     role: "Guru Pengajar",
   });
@@ -69,11 +69,8 @@ export default function Navbar() {
 
     const savedName = localStorage.getItem("modulin_user_name");
     const savedRole = localStorage.getItem("modulin_user_role");
+    const savedEmail = localStorage.getItem("modulin_user_email");
     const loggedInFlag = localStorage.getItem("modulin_logged_in");
-    const isDashboardRoute =
-      pathname?.startsWith("/editor") ||
-      pathname?.startsWith("/create") ||
-      pathname?.startsWith("/dashboard");
 
     // 1. Jika terautentikasi lewat Google (NextAuth)
     if (session?.user) {
@@ -101,30 +98,30 @@ export default function Navbar() {
               savedName ||
               metaName ||
               (isDemo ? "Guru Demo Modulin" : sbUser.email?.split("@")[0] || "Guru Pengajar"),
-            email: sbUser.email || "guru.demo@modulin.id",
+            email: sbUser.email || "",
             image: sbUser.user_metadata?.avatar_url || null,
             role: savedRole || (isDemo ? "Pendidik (Akun Demo)" : "Guru Pengajar"),
           });
-        } else if (loggedInFlag === "true" || isDashboardRoute) {
+        } else if (loggedInFlag === "true" && savedName) {
           setIsLoggedIn(true);
           setUserProfile({
-            name: savedName || "Guru Demo Modulin",
-            email: "guru.demo@modulin.id",
+            name: savedName,
+            email: savedEmail || "",
             image: null,
-            role: savedRole || "Pendidik (Akun Demo)",
+            role: savedRole || "Guru Pengajar",
           });
         } else {
           setIsLoggedIn(false);
         }
       })
       .catch(() => {
-        if (loggedInFlag === "true" || isDashboardRoute) {
+        if (loggedInFlag === "true" && savedName) {
           setIsLoggedIn(true);
           setUserProfile({
-            name: savedName || "Guru Demo Modulin",
-            email: "guru.demo@modulin.id",
+            name: savedName,
+            email: savedEmail || "",
             image: null,
-            role: savedRole || "Pendidik (Akun Demo)",
+            role: savedRole || "Guru Pengajar",
           });
         } else {
           setIsLoggedIn(false);
