@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./src/app/icon.png" alt="Modulin Logo" width="180" />
+  <img src="./public/modulin-logo-2.png" alt="Modulin Logo" width="180" />
   <h1>Modulin</h1>
   <p><strong>Generator Modul Ajar AI untuk Kurikulum Merdeka</strong></p>
 
